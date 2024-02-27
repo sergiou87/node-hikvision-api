@@ -1,4 +1,8 @@
 export type StreamingStatus = {
   totalStreamingSessions: number;
-  StreamingSessionStatusList: any[];
+  StreamingSessionStatusList: {
+    clientAddress: {
+      ipAddress: string;
+    };
+  }[];
 };

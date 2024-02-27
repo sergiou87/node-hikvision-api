@@ -56,7 +56,7 @@ export declare class HikVision extends EventEmitter {
      * @param channel
      * @param streamingChannel
      */
-    validateStreamingChannel(channel: number, streamingChannel: StreamingChannel): Promise<{
+    validateStreamParameters(channel: number, streamingChannel: StreamingChannel): Promise<{
         valid: boolean;
     }>;
     /**

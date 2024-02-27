@@ -9,13 +9,13 @@ NodeJS Module for communication with HikVision IP Cameras.
 Now updated with Typescript and proper ISAPI calls.
 
 
-## Status: Work in Progress
-
-The security/encryption process is especially broken
+## Status
+**Work in Progress**
 
 ### Working:
 
 * View/update stream channel parameters
+  * Partial validation before sending XML is possible, see example 5
 * Get device status
 * Enable/disable ONVIF
 * Add/remove ONVIF users
@@ -31,70 +31,58 @@ The ISAPI [spec](./repo/isapi.pdf) includes the full steps in Chapter 3, but thi
 ![ISAPI encryption steps](./repo/enc-steps-2.png)
 ![ISAPI encryption steps](./repo/enc-steps.png)
 
-**Without encryption** one should _not_ use this library to pass sensitive data _at all_
+**Without encryption** one should _not_ use this library to pass sensitive data _at all_ even if you are using HTTPS.
 
 
 ### Notes
 
-**There are major differences between this library (which was forked) and the original one**
+**There are major differences between this library and the original one**
 
 For instance, the previous version of this library had PTZ functionalities,
 however this is not within the scope of this library. In my own opinion, you should be using
 ONVIF for those functions.
 
+### Roadmap
 
-## Example:
+* Implement proper sensitive data encryption
+* Write unit tests
+* Implement NetworkInterface validation
+* Return PTZ capabilities
+* Basic error handling (right now the axios ref is thrown all the way up the stack)
+* Clean up alarm notification handling
+
+
+## Getting Started:
+
+Installing:
+```shell
+npm i @copcart/node-hikvision-api
+```
+
+Importing:
 ```typescript
 import { HikVision } from '@copcart/node-hikvision-api';
+```
 
-// Options are now a standalone type
+Configuring:
+```typescript
 const camera = new HikVision({
-  username: 'admin',
-  password: 'password',
-  host: '192.168.1.64',
-  debug: true,
-  port: 80,
-  reconnectAfter: 30000,
-});
-
-camera.on('connect', () => {
-  camera.getOnvifUsers().then(console.log);
-  camera.getStatus().then(console.log);
-  camera.getStreamingStatus().then(console.log);
-});
-
-
-
-camera.on('alarm', (eventType, eventState, channelID) => {
-  if (eventType === 'VideoMotion' && eventState === 'Start')
-    console.log('Channel ' + channelID + ': Video Motion Detected');
-  if (eventType === 'VideoMotion' && eventState === 'Stop')
-    console.log('Channel ' + channelID + ': Video Motion Ended');
-  if (eventType === 'LineDetection' && eventState === 'Start')
-    console.log('Channel ' + channelID + ': Line Cross Detected');
-  if (eventType === 'LineDetection' && eventState === 'Stop')
-    console.log('Channel ' + channelID + ': Line Cross Ended');
-  if (eventType === 'AlarmLocal' && eventState === 'Start')
-    console.log(
-      'Channel ' + channelID + ': Local Alarm Triggered: ' + channelID,
-    );
-  if (eventType === 'AlarmLocal' && eventState === 'Stop')
-    console.log('Channel ' + channelID + ': Local Alarm Ended: ' + channelID);
-  if (eventType === 'VideoLoss' && eventState === 'Start')
-    console.log('Channel ' + channelID + ': Video Lost!');
-  if (eventType === 'VideoLoss' && eventState === 'Stop')
-    console.log('Channel ' + channelID + ': Video Found!');
-  if (eventType === 'VideoBlind' && eventState === 'Start')
-    console.log('Channel ' + channelID + ': Video Blind!');
-  if (eventType === 'VideoBlind' && eventState === 'Stop')
-    console.log('Channel ' + channelID + ': Video Unblind!');
+  username: 'admin',     // Required
+  password: 'password',  // Required
+  host: '192.168.1.64',  // Required
+  debug: true,           // Optional, defaults to false
+  port: 80,              // Optional, defaults to 80
+  reconnectAfter: 30000, // Optional, defaults to 30000 (30s)
+  protocol: 'http',      // Optional, defaults to 'http'
 });
 ```
 
-You can run a very similar example available within the repository:
+
+Additionally, you can run examples (available in `examples/`) like shown:
+
 ```shell
-npm run example:1 10.1.8.240 password  
+npm run example:basic CAMERA_IP CAMERA_PASSWORD CAMERA_USERNAME  
  ```
 
-There are more examples available within `examples/`
+There are more examples available as npm scripts, so please check package.json
 

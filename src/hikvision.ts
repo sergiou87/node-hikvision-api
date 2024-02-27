@@ -154,7 +154,7 @@ export class HikVision extends EventEmitter {
    * @param channel
    * @param streamingChannel
    */
-  async validateStreamingChannel(
+  async validateStreamParameters(
     channel = 101,
     streamingChannel: StreamingChannel,
   ): Promise<{ valid: boolean }> {

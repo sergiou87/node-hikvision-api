@@ -1,7 +1,7 @@
-import { HikVision } from '../dist';
+import { HikVision } from '../src';
 
 const camera = new HikVision({
-  username: 'admin',
+  username: process.argv[4] || 'admin',
   password: process.argv[3],
   host: process.argv[2],
   debug: true,

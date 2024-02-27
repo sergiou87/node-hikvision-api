@@ -1,6 +1,6 @@
 {
   "name": "@copcart/node-hikvision-api",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "HikVision HTTP ISAPI Module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,12 +28,12 @@
   "scripts": {
     "test": "echo 0",
     "clean": "rm -rf dist/",
-    "build": "npm run clean && tsc",
-    "example:1": "ts-node examples/01-basic.ts",
-    "example:2": "ts-node examples/02-set-stream-parameters.ts",
-    "example:3": "ts-node examples/03-get-streaming-capabilities.ts",
-    "example:4": "ts-node examples/04-network-settings.ts",
-    "example:5": "ts-node examples/05-validate-streaming-channel.ts"
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "example:basic": "ts-node examples/01-basic.ts",
+    "example:stream:parameters": "ts-node examples/02-set-stream-parameters.ts",
+    "example:stream:capabilities": "ts-node examples/03-get-streaming-capabilities.ts",
+    "example:network:settings": "ts-node examples/04-network-settings.ts",
+    "example:stream:validate": "ts-node examples/05-validate-stream-parameters.ts"
   },
   "repository": {
     "type": "git",

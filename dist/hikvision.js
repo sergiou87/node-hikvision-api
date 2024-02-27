@@ -85,7 +85,7 @@ class HikVision extends node_events_1.EventEmitter {
      * @param channel
      * @param streamingChannel
      */
-    async validateStreamingChannel(channel = 101, streamingChannel) {
+    async validateStreamParameters(channel = 101, streamingChannel) {
         const data = await this.getStreamingCapabilities(channel);
         return (0, hikvision_validators_1.validateStream)(streamingChannel, data);
     }

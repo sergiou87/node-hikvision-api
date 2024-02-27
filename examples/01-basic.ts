@@ -1,8 +1,8 @@
-import { HikVision } from '../dist';
+import { HikVision } from '../src';
 import { clearTimeout } from 'node:timers';
 
 const camera = new HikVision({
-  username: 'admin',
+  username: process.argv[4] || 'admin',
   password: process.argv[3],
   host: process.argv[2],
   debug: true,
@@ -27,7 +27,7 @@ camera.on('connect', () => {
     camera.getStatus(),
     camera.getStreamingStatus(),
   ]).then((result) => {
-    console.log(result);
+    console.log(JSON.stringify(result, null, 2));
     setConnectionTimeout();
   });
 });

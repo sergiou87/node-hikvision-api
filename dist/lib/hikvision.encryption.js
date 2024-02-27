@@ -64,7 +64,7 @@ class HikVisionEncryption {
         const bytes = Buffer.from(data, 'hex');
         console.log(data);
         console.log(bytes.toString('hex'));
-        const key2 = Buffer.from(key.slice(0, 16));
+        const key2 = Buffer.copyBytesFrom(key).subarray(0, 16);
         console.log(key2.toString('hex'));
         const newBuffer = new ArrayBuffer(key.length);
         new Uint8Array(newBuffer).set(key);

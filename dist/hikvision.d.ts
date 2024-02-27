@@ -2,7 +2,7 @@
 import { EventEmitter } from 'node:events';
 import { DeviceStatus, HikVisionPartialOptions, Integrations, OnvifUser, OnvifUserType, StreamingChannel, StreamingStatus } from './types';
 import { NetworkInterface } from './types/network-interface.type';
-import { RawCapabilityResponse } from './responses';
+import { StreamCapabilities } from './types/stream-capabilities.type';
 export declare class HikVision extends EventEmitter {
     private triggerActive;
     private usingAuthDigest;
@@ -37,7 +37,7 @@ export declare class HikVision extends EventEmitter {
      * Get the capabilities for a channel
      * @param channel
      */
-    getStreamingCapabilities(channel?: number): Promise<RawCapabilityResponse>;
+    getStreamingCapabilities(channel?: number): Promise<StreamCapabilities>;
     /**
      * Get a specific channel
      * @param channel
@@ -50,6 +50,14 @@ export declare class HikVision extends EventEmitter {
      */
     updateStreamingChannel(channel: number, streamingChannel: StreamingChannel): Promise<{
         success: boolean;
+    }>;
+    /**
+     * Validate video streaming properties
+     * @param channel
+     * @param streamingChannel
+     */
+    validateStreamingChannel(channel: number, streamingChannel: StreamingChannel): Promise<{
+        valid: boolean;
     }>;
     /**
      * Get integrations for services

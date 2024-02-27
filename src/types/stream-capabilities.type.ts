@@ -1,124 +1,52 @@
+import {
+  NumberCurrentOptions,
+  NumberMinMaxCurrent,
+  NumberMinMaxDefault,
+  StringCurrentOptions,
+} from './validators.type';
+
 export type StreamCapabilities = {
   Transport: {
     ControlProtocolList: {
       ControlProtocol: {
-        streamingTransport: {
-          current: string;
-          options: string[];
-        };
+        streamingTransport: StringCurrentOptions;
       };
     };
     Multicast: {
-      videoDestPortNo: {
-        min: number;
-        max: number;
-        default: number;
-      };
-      audioDestPortNo: {
-        min: number;
-        max: number;
-        default: number;
-      };
+      videoDestPortNo: NumberMinMaxDefault;
+      audioDestPortNo: NumberMinMaxDefault;
     };
     Security: {
-      certificateType: {
-        current: string;
-        options: string[];
-      };
+      certificateType: StringCurrentOptions;
       SecurityAlgorithm: {
-        algorithmType: {
-          current: string;
-          options: string[];
-        };
+        algorithmType: StringCurrentOptions;
       };
     };
     SRTPMulticast: {
-      SRTPVideoDestPortNo: {
-        min: number;
-        max: number;
-        default: number;
-      };
-      SRTPAudioDestPortNo: {
-        min: number;
-        max: number;
-        default: number;
-      };
+      SRTPVideoDestPortNo: NumberMinMaxDefault;
+      SRTPAudioDestPortNo: NumberMinMaxDefault;
     };
   };
   Video: {
-    videoCodecType: {
-      current: string;
-      options: string[];
-    };
-    videoResolutionWidth: {
-      current: number;
-      options: number[];
-    };
-    videoResolutionHeight: {
-      current: number;
-      options: number[];
-    };
-    videoQualityControlType: {
-      current: string;
-      options: string[];
-    };
-    constantBitRate: {
-      current: number;
-      min: number;
-      max: number;
-    };
-    fixedQuality: {
-      current: number;
-      options: number[];
-    };
-    vbrUpperCap: {
-      current: number;
-      min: number;
-      max: number;
-    };
-    maxFrameRate: {
-      current: number;
-      options: string[];
-    };
-    keyFrameInterval: {
-      current: number;
-      min: number;
-      max: number;
-    };
-    H264Profile: {
-      current: string;
-      options: string[];
-    };
-    GovLength: {
-      current: number;
-      min: number;
-      max: number;
-    };
+    videoCodecType: StringCurrentOptions;
+    videoResolutionWidth: NumberCurrentOptions;
+    videoResolutionHeight: NumberCurrentOptions;
+    videoQualityControlType: StringCurrentOptions;
+    constantBitRate: NumberMinMaxCurrent;
+    fixedQuality: NumberCurrentOptions;
+    vbrUpperCap: NumberMinMaxCurrent;
+    maxFrameRate: NumberCurrentOptions;
+    keyFrameInterval: NumberMinMaxCurrent;
+    H264Profile: StringCurrentOptions;
+    GovLength: NumberMinMaxCurrent;
     SVC: {
-      enabled: {
-        current: string;
-        options: string[];
-      };
-      SVCMode: {
-        current: string[];
-        options: string[];
-      };
+      SVCMode: StringCurrentOptions;
     };
-    smoothing: {
-      current: number;
-      min: number;
-      max: number;
-    };
-    H265Profile: {
-      current: string;
-      options: string[];
-    };
+    smoothing: NumberMinMaxCurrent;
+    H265Profile: StringCurrentOptions;
   };
   Audio: {
-    audioCompressionType: {
-      current: string;
-      options: string[];
-    };
+    audioCompressionType: StringCurrentOptions;
   };
   isSpportDynamicCapWithCondition: boolean;
   isSupportSmartCodeWithoutReStart: boolean;

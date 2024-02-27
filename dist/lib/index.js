@@ -1,5 +1,4 @@
 "use strict";
-// created from 'create-ts-index'
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -19,3 +18,4 @@ __exportStar(require("./hikvision.builders"), exports);
 __exportStar(require("./hikvision.encryption"), exports);
 __exportStar(require("./hikvision.helpers"), exports);
 __exportStar(require("./hikvision.parsers"), exports);
+__exportStar(require("./hikvision.formatters"), exports);

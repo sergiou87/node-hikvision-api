@@ -26,6 +26,7 @@ import {
   parseNetworkInterfaces,
   parseNetworkInterface,
   buildNetworkInterface,
+  formatStreamCapabilities,
 } from './lib';
 import { Method } from 'axios';
 import {
@@ -41,7 +42,8 @@ import {
   StreamingStatus,
 } from './types';
 import { NetworkInterface } from './types/network-interface.type';
-import { RawCapabilityResponse } from './responses';
+import { StreamCapabilities } from './types/stream-capabilities.type';
+import { validateStream } from './lib/hikvision.validators';
 
 export class HikVision extends EventEmitter {
   private triggerActive = false;
@@ -111,13 +113,11 @@ export class HikVision extends EventEmitter {
    * Get the capabilities for a channel
    * @param channel
    */
-  async getStreamingCapabilities(
-    channel = 101,
-  ): Promise<RawCapabilityResponse> {
+  async getStreamingCapabilities(channel = 101): Promise<StreamCapabilities> {
     const data = await this.performRequest(
       this.getStreamingURL(['channels', channel, 'capabilities']),
     );
-    return parseCapabilities(data);
+    return formatStreamCapabilities(parseCapabilities(data));
   }
 
   /**
@@ -147,6 +147,20 @@ export class HikVision extends EventEmitter {
     );
 
     return validatePutResponse(parsePutResponse(data));
+  }
+
+  /**
+   * Validate video streaming properties
+   * @param channel
+   * @param streamingChannel
+   */
+  async validateStreamingChannel(
+    channel = 101,
+    streamingChannel: StreamingChannel,
+  ): Promise<{ valid: boolean }> {
+    const data = await this.getStreamingCapabilities(channel);
+
+    return validateStream(streamingChannel, data);
   }
 
   // MARK: Integrations

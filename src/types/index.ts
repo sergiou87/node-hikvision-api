@@ -6,3 +6,4 @@ export * from './onvif-user.type';
 export * from './options.type';
 export * from './streaming-channel.type';
 export * from './streaming-status.type';
+export * from './validators.type';

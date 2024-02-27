@@ -7,6 +7,7 @@ const net = require("net");
 const NetKeepAlive = require("net-keepalive");
 const axios_digest_auth_1 = require("@mhoc/axios-digest-auth");
 const lib_1 = require("./lib");
+const hikvision_validators_1 = require("./lib/hikvision.validators");
 class HikVision extends node_events_1.EventEmitter {
     get connected() {
         return this._connected;
@@ -60,7 +61,7 @@ class HikVision extends node_events_1.EventEmitter {
      */
     async getStreamingCapabilities(channel = 101) {
         const data = await this.performRequest(this.getStreamingURL(['channels', channel, 'capabilities']));
-        return (0, lib_1.parseCapabilities)(data);
+        return (0, lib_1.formatStreamCapabilities)((0, lib_1.parseCapabilities)(data));
     }
     /**
      * Get a specific channel
@@ -78,6 +79,15 @@ class HikVision extends node_events_1.EventEmitter {
     async updateStreamingChannel(channel = 101, streamingChannel) {
         const data = await this.performRequest(this.getStreamingURL(['channels', channel]), 'PUT', (0, lib_1.buildStreamOptions)(streamingChannel, channel));
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
+    }
+    /**
+     * Validate video streaming properties
+     * @param channel
+     * @param streamingChannel
+     */
+    async validateStreamingChannel(channel = 101, streamingChannel) {
+        const data = await this.getStreamingCapabilities(channel);
+        return (0, hikvision_validators_1.validateStream)(streamingChannel, data);
     }
     // MARK: Integrations
     /**

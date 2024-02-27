@@ -22,3 +22,4 @@ __exportStar(require("./onvif-user.type"), exports);
 __exportStar(require("./options.type"), exports);
 __exportStar(require("./streaming-channel.type"), exports);
 __exportStar(require("./streaming-status.type"), exports);
+__exportStar(require("./validators.type"), exports);

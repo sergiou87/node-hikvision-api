@@ -1,12 +1,13 @@
 {
   "name": "@copcart/node-hikvision-api",
   "version": "0.0.1",
-  "description": "Hikvision HTTP API Module",
+  "description": "HikVision HTTP ISAPI Module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
     "@mhoc/axios-digest-auth": "^0.8.0",
     "axios": "^1.6.7",
+    "fast-xml-parser": "^4.3.5",
     "net-keepalive": "^3.0.1",
     "xml2js": "^0.6.2"
   },
@@ -33,23 +34,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nayrnet/node-hikvision-api.git"
+    "url": "git+https://github.com/CopCart/node-hikvision-api.git"
   },
   "keywords": [
-    "Hikvision",
+    "HikVision",
     "Hik",
-    "Imporx",
-    "PTZ",
     "IPC",
     "Security Camera",
-    "Home Automation"
+    "Home Automation",
+    "ISAPI"
   ],
-  "author": "Ryan Hunt",
+  "author": "Keaton Burleson",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/nayrnet/node-hikvision-api/issues"
+    "url": "https://github.com/CopCart/node-hikvision-api/issues"
   },
-  "homepage": "https://github.com/nayrnet/node-hikvision-api#readme",
+  "homepage": "https://github.com/CopCart/node-hikvision-api#readme",
   "files": [
     "/dist"
   ]

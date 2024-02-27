@@ -4,112 +4,63 @@
 [![npm](https://img.shields.io/npm/v/npm.svg)]()
 [![node](https://img.shields.io/node/v/gh-badges.svg)]()
 
-NodeJS Module for communication with Hikvision IP Cameras.
+NodeJS Module for communication with HikVision IP Cameras.
+
+Now updated with Typescript and proper ISAPI calls.
+
 
 ## Status: Work in Progress
 
 ## Example:
-```javascript
-#!/usr/bin/nodejs
-var     ipcamera	= require('node-hikvision-api');
+```typescript
+import { HikVision } from '@copcart/node-hikvision-api';
 
-// Options:
-var options = {
-	host	: '192.168.1.100',
-	port 	: '80',
-	user 	: 'admin',
-	pass 	: 'password123',
-	log 	: false,
-};
-
-var hikvision 	= new ipcamera.hikvision(options);
-
-// Switch to Day Profile
-hikvision.nightProfile()
-
-// PTZ Go to preset 10
-hikvision.ptzPreset(10)
-
-// Monitor Camera Alarms
-hikvision.on('alarm', function(code,action,index) {
-	if (code === 'VideoMotion'   && action === 'Start')  console.log(getDateTime() + ' Channel ' + index + ': Video Motion Detected')
-	if (code === 'VideoMotion'   && action === 'Stop')   console.log(getDateTime() + ' Channel ' + index + ': Video Motion Ended')
-	if (code === 'LineDetection' && action === 'Start')  console.log(getDateTime() + ' Channel ' + index + ': Line Cross Detected')
-	if (code === 'LineDetection' && action === 'Stop')   console.log(getDateTime() + ' Channel ' + index + ': Line Cross Ended')
-	if (code === 'AlarmLocal'    && action === 'Start')  console.log(getDateTime() + ' Channel ' + index + ': Local Alarm Triggered: ' + index)
-	if (code === 'AlarmLocal'    && action === 'Stop')   console.log(getDateTime() + ' Channel ' + index + ': Local Alarm Ended: ' + index)
-	if (code === 'VideoLoss'     && action === 'Start')  console.log(getDateTime() + ' Channel ' + index + ': Video Lost!')
-	if (code === 'VideoLoss'     && action === 'Stop')   console.log(getDateTime() + ' Channel ' + index + ': Video Found!')
-	if (code === 'VideoBlind'    && action === 'Start')  console.log(getDateTime() + ' Channel ' + index + ': Video Blind!')
-	if (code === 'VideoBlind'    && action === 'Stop')   console.log(getDateTime() + ' Channel ' + index + ': Video Unblind!')
+// Options are now a standalone type
+const camera = new HikVision({
+  username: 'admin',
+  password: 'password',
+  host: '192.168.1.64',
+  debug: true,
+  port: 80,
+  reconnectAfter: 30000,
 });
 
-function getDateTime() {
-	var date = new Date();
-	var hour = date.getHours();
-	hour = (hour < 10 ? "0" : "") + hour;
-	var min  = date.getMinutes();
-	min = (min < 10 ? "0" : "") + min;
-	var sec  = date.getSeconds();
-	sec = (sec < 10 ? "0" : "") + sec;
-	var year = date.getFullYear();
-	var month = date.getMonth() + 1;
-	month = (month < 10 ? "0" : "") + month;
-	var day  = date.getDate();
-	day = (day < 10 ? "0" : "") + day;
-	return year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
-}
+camera.on('connect', () => {
+  camera.getOnvifUsers().then(console.log);
+  camera.getStatus().then(console.log);
+  camera.getStreamingStatus().then(console.log);
+});
+
+
+
+camera.on('alarm', (eventType, eventState, channelID) => {
+  if (eventType === 'VideoMotion' && eventState === 'Start')
+    console.log('Channel ' + channelID + ': Video Motion Detected');
+  if (eventType === 'VideoMotion' && eventState === 'Stop')
+    console.log('Channel ' + channelID + ': Video Motion Ended');
+  if (eventType === 'LineDetection' && eventState === 'Start')
+    console.log('Channel ' + channelID + ': Line Cross Detected');
+  if (eventType === 'LineDetection' && eventState === 'Stop')
+    console.log('Channel ' + channelID + ': Line Cross Ended');
+  if (eventType === 'AlarmLocal' && eventState === 'Start')
+    console.log(
+      'Channel ' + channelID + ': Local Alarm Triggered: ' + channelID,
+    );
+  if (eventType === 'AlarmLocal' && eventState === 'Stop')
+    console.log('Channel ' + channelID + ': Local Alarm Ended: ' + channelID);
+  if (eventType === 'VideoLoss' && eventState === 'Start')
+    console.log('Channel ' + channelID + ': Video Lost!');
+  if (eventType === 'VideoLoss' && eventState === 'Stop')
+    console.log('Channel ' + channelID + ': Video Found!');
+  if (eventType === 'VideoBlind' && eventState === 'Start')
+    console.log('Channel ' + channelID + ': Video Blind!');
+  if (eventType === 'VideoBlind' && eventState === 'Stop')
+    console.log('Channel ' + channelID + ': Video Unblind!');
+});
 ```
 
-## Functions:
-```javascript
-// Switch Camera to Night Profile
-hikvision.dayProfile()
+## Major Differences
 
-// Switch Camera to Night Profile
-hikvision.nightProfile()
-
-// Issue hikvision RAW PTZ Command (See API Manual in GitHub Wiki)
-hikvision.ptzCommand(cmd,arg1,arg2,arg3,arg4)
-
-// Go To Preset
-hikvision.ptzPreset(int)
-
-// PTZ Zoom, input level: positive = zoom in / negative = zoom out
-hikvision.ptzZoom(float)
-
-// PTZ Move
-// Directions = Up/Down/Left/Right/LeftUp/RightUp/LeftDown/RightDown
-// Actions = start/stop
-// Speed = 1-8
-hikvision.ptzMove(direction,action,speed)
-
-// Request current PTZ Status
-hikvision.ptzStatus()
-
-// Callback for any Alarm (Motion Detection/Video Loss & Blank/Alarm Inputs)
-hikvision.on('alarm', function(code,action,index){  });
-
-// Callback for PTZ Status
-hikvision.on('ptzStatus', function(data){  });
-
-// Callback on connect
-hikvision.on('connect', function(){  });
-
-// Callback on error
-hikvision.on('error', function(error){  });
-
-```
-
-## Options
-* host - hostname of your hikvision camera
-* port - port for your hikvision camera (80 by default)
-* user - username for camera
-* pass - password for camera
-* log - boolean to show detailed logs, defaults to false.
-
-## More Info:
-* Support & Discussion:
-
-## About:
-By: Ryan Hunt
+The previous version of this library had PTZ functionalities, 
+however this is not within the scope of this library in my own opinion, you should be using
+ONVIF for those functions.

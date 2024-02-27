@@ -1,26 +1,54 @@
+// noinspection JSUnusedGlobalSymbols
+
 import { EventEmitter } from 'node:events';
 import * as net from 'net';
 import * as NetKeepAlive from 'net-keepalive';
-import { Parser } from 'xml2js';
-import { buildDigestHeader, parseOptions } from './helpers';
 import AxiosDigestAuth from '@mhoc/axios-digest-auth';
+
 import {
-  HikVisionDeviceStatus,
-  HikVisionEvent,
+  parseAlert,
+  parseGeneric,
+  parseIntegrations,
+  parsePutResponse,
+  parseStatus,
+  parseStreamingChannel,
+  parseStreamingChannels,
+  parseStreamingStatus,
+  parseUsersList,
+  buildIntegrations,
+  buildOnvifUser,
+  buildStreamOptions,
+  buildDigestHeader,
+  parseOptions,
+  validatePutResponse,
+} from './lib';
+import { Method } from 'axios';
+import {
+  CameraEvent,
+  DeviceStatus,
   HikVisionOptions,
   HikVisionPartialOptions,
-} from './hikvision.types';
+  Integrations,
+  NotificationAlert,
+  OnvifUserType,
+  StreamingChannel,
+  StreamingStatus,
+} from './types';
 
 export class HikVision extends EventEmitter {
-  private parser: Parser = new Parser();
   private triggerActive = false;
   private usingAuthDigest = false;
   private isAuthenticated = false;
   private authHeader: string = '';
-  private activeEvents: { [key: string]: HikVisionEvent } = {};
-  private options: HikVisionOptions;
+  private activeEvents: { [key: string]: CameraEvent } = {};
   private client: net.Socket;
   private connectionCount = 0;
+  private readonly options: HikVisionOptions;
+  private _connected: boolean;
+
+  get connected() {
+    return this._connected;
+  }
 
   constructor(options: HikVisionPartialOptions) {
     super();
@@ -30,36 +58,150 @@ export class HikVision extends EventEmitter {
     this.connect();
   }
 
-  getStatus() {
+  // MARK: General
+
+  /**
+   * Get device status
+   */
+  async getStatus(): Promise<DeviceStatus> {
     const url = `http://${this.options.host}/ISAPI/System/status`;
 
-    return this.performGetRequest(url).then((result) =>
-      this.parseStatus(result),
-    );
+    const data = await this.performRequest(url);
+    return parseStatus(data);
   }
 
   isDayMode(channel = 1) {
     const url = `http://${this.options.host}/ISAPI/Image/channels/${channel}/ISPMode`;
 
-    return this.performGetRequest(url);
+    return this.performRequest(url);
   }
 
-  checkStreamingStatus() {
+  // MARK: Streaming
+
+  /**
+   * Get streaming channels
+   */
+  async getStreamingChannels(): Promise<StreamingChannel[]> {
     const url = `http://${this.options.host}/ISAPI/Streaming/channels`;
-    return this.performGetRequest(url);
+    const data = await this.performRequest(url);
+    return parseStreamingChannels(data);
   }
 
-  private async performGetRequest(url: string) {
+  /**
+   * Get streaming status
+   */
+  async getStreamingStatus(): Promise<StreamingStatus> {
+    const url = `http://${this.options.host}/ISAPI/Streaming/status`;
+    const data = await this.performRequest(url);
+    return parseStreamingStatus(data);
+  }
+
+  /**
+   * Get the capabilities for a channel
+   * @param channel
+   */
+  async getStreamingCapabilities(channel = 1) {
+    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}/capabilities`;
+    const data = await this.performRequest(url);
+    return parseGeneric(data);
+  }
+
+  /**
+   * Get a specific channel
+   * @param channel
+   */
+  async getStreamingChannel(channel = 1) {
+    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
+    const data = await this.performRequest(url);
+    return parseStreamingChannel(data);
+  }
+
+  /**
+   * Update video streaming properties
+   * @param channel
+   * @param streamingChannel
+   */
+  async updateStreamingChannel(
+    channel = 1,
+    streamingChannel: StreamingChannel,
+  ) {
+    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
+    const data = await this.performRequest(
+      url,
+      'PUT',
+      buildStreamOptions(streamingChannel),
+    );
+
+    return validatePutResponse(parsePutResponse(data));
+  }
+
+  // MARK: Integrations
+
+  /**
+   * Get integrations for services
+   */
+  async getIntegrations() {
+    const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
+    const data = await this.performRequest(url);
+    return parseIntegrations(data);
+  }
+
+  /**
+   * Update integrations
+   * @param integrations
+   */
+  async updateIntegrations(integrations: Integrations) {
+    const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
+    const xml = buildIntegrations(integrations);
+    const data = await this.performRequest(url, 'PUT', xml);
+    return validatePutResponse(parsePutResponse(data));
+  }
+
+  // MARK: Onvif
+
+  async getOnvifUsers() {
+    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
+
+    const data = await this.performRequest(url);
+    return parseUsersList(data);
+  }
+
+  async deleteOnvifUser(userID: number) {
+    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users/${userID}`;
+    const data = await this.performRequest(url, 'DELETE');
+    return validatePutResponse(parsePutResponse(data));
+  }
+
+  async addOnvifUser(
+    username: string,
+    password: string,
+    id: number,
+    userType: OnvifUserType = 'mediaUser',
+  ) {
+    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
+    const user = buildOnvifUser(username, password, id, userType);
+    const data = await this.performRequest(url, 'POST', user);
+
+    return parseGeneric(data);
+  }
+
+  private async performRequest(
+    url: string,
+    method: Method = 'GET',
+    data?: any,
+  ) {
     const digestAuth = new AxiosDigestAuth({
       username: this.options.username,
       password: this.options.password,
     });
 
     const result = await digestAuth.request({
-      method: 'GET',
+      method,
       url,
+      data,
     });
-    return result.data;
+
+    return result.data as any;
   }
 
   private connect() {
@@ -86,8 +228,6 @@ export class HikVision extends EventEmitter {
           '\r\n' +
           'Accept: multipart/x-mixed-replace\r\n\r\n';
 
-        if (options.log) console.log('Sending', header);
-
         this.connectionCount += 1;
         this.client.write(header);
         this.client.setKeepAlive(true, 1000);
@@ -98,14 +238,12 @@ export class HikVision extends EventEmitter {
     );
 
     this.client.on('data', (data) => {
-      if (this.isAuthenticated) this.handleData(data);
+      if (this.isAuthenticated) this.handleAlert(parseAlert(data));
       else this.handleAuthResponse(data);
     });
 
-    this.client.on('close', (hadError) => {
+    this.client.on('close', () => {
       // Try to reconnect after specified time frame (default 30 seconds)
-      if (hadError && options.log) console.warn('We had error when closing');
-
       if (this.connectionCount <= 2) {
         this.connect();
         return;
@@ -115,7 +253,7 @@ export class HikVision extends EventEmitter {
         this.connect();
       }, options.reconnectAfter);
 
-      this.handleEnd();
+      this.handleDisconnect();
     });
 
     this.client.on('error', (err) => {
@@ -124,22 +262,25 @@ export class HikVision extends EventEmitter {
   }
 
   private handleConnection() {
-    if (this.options.log)
-      console.log(
+    if (this.isAuthenticated || this.usingAuthDigest) {
+      this.debugLog(
         'Connected to ' + this.options.host + ':' + this.options.port,
       );
-
-    if (this.isAuthenticated || this.usingAuthDigest) this.emit('connect');
+      this._connected = true;
+      this.emit('connect');
+    }
   }
 
-  private handleEnd() {
-    if (this.options.log) console.log('Connection closed!');
-    this.emit('end');
+  private handleDisconnect() {
+    this.debugLog('Connection closed!');
+    this.emit('disconnected');
+    this._connected = false;
   }
 
   private handleError(err: Error) {
-    if (this.options.log) console.log('Connection error: ' + err);
+    this.debugLog('Connection error:', err);
     this.emit('error', err);
+    this._connected = false;
   }
 
   private handleAuthResponse(data: Buffer) {
@@ -163,157 +304,82 @@ export class HikVision extends EventEmitter {
     this.usingAuthDigest = true;
   }
 
-  private handleData(data: Buffer) {
-    this.parser.parseString(data, (err, result) => {
-      if (result) {
-        const alert = result['EventNotificationAlert'];
+  private handleAlert(alert: NotificationAlert) {
+    const eventIdentifier = alert.eventType + alert.channelID;
 
-        if (!alert) {
-          console.warn('No alert in result', data.toString());
-          return;
+    // Count 0 seems to indicate everything is fine and nothing is wrong, used as a heartbeat
+    // if triggerActive is true, lets step through the activeEvents
+    // If activeEvents has something, lets end those events and clear activeEvents and reset triggerActive
+    if (alert.activePostCount === 0) {
+      if (this.triggerActive == true) this.clearActiveEvents();
+      else this.debugLog('Heartbeat');
+    } else if (
+      typeof this.activeEvents[eventIdentifier] == 'undefined' ||
+      this.activeEvents[eventIdentifier] == null
+    ) {
+      this.activeEvents[eventIdentifier] = {
+        eventType: alert.eventType,
+        channelID: alert.channelID,
+        lastTimestamp: Date.now(),
+      };
+      this.emit('alarm', alert.eventType, alert.eventState, alert.channelID);
+      this.triggerActive = true;
+    } else {
+      this.debugLog(
+        '    Skipped Event: ' +
+          alert.eventType +
+          ' ' +
+          alert.eventState +
+          ' ' +
+          alert.channelID +
+          ' ' +
+          alert.activePostCount,
+      );
+
+      // Update lastTimestamp
+      this.activeEvents[eventIdentifier] = {
+        eventType: alert.eventType,
+        channelID: alert.channelID,
+        lastTimestamp: Date.now(),
+      };
+
+      // step through activeEvents
+      // if we haven't seen it in more than 2 seconds, lets end it and remove from activeEvents
+      Object.keys(this.activeEvents).forEach((eventIdentifier) => {
+        const details = this.activeEvents[eventIdentifier];
+
+        if ((Date.now() - details.lastTimestamp) / 1000 > 2) {
+          this.debugLog(
+            'Ending Event: ' +
+              eventIdentifier +
+              ' - ' +
+              details.eventType +
+              ' - ' +
+              (Date.now() - details.lastTimestamp) / 1000,
+          );
+
+          this.emit('alarm', details.eventType, 'Stop', details.channelID);
+          delete this.activeEvents[eventIdentifier];
         }
-
-        let code = alert['eventType'][0];
-        let action = alert['eventState'][0];
-        const index = parseInt(alert['channelID'][0]);
-
-        const count = parseInt(alert['activePostCount'][0]);
-
-        // give codes returned by camera prettier and standardized description
-        if (code === 'IO') code = 'AlarmLocal';
-        if (code === 'VMD') code = 'VideoMotion';
-        if (code === 'linedetection') code = 'LineDetection';
-        if (code === 'videoloss') code = 'VideoLoss';
-        if (code === 'shelteralarm') code = 'VideoBlind';
-        if (action === 'active') action = 'Start';
-        if (action === 'inactive') action = 'Stop';
-
-        // create and event identifier for each recieved event
-        // This allows multiple detection types with multiple indexes for DVR or multihead devices
-        const eventIdentifier = code + index;
-
-        // Count 0 seems to indicate everything is fine and nothing is wrong, used as a heartbeat
-        // if triggerActive is true, lets step through the activeEvents
-        // If activeEvents has something, lets end those events and clear activeEvents and reset triggerActive
-        if (count == 0) {
-          if (this.triggerActive == true) {
-            for (const i in this.activeEvents) {
-              if (this.activeEvents.hasOwnProperty(i)) {
-                const details = this.activeEvents[i];
-                if (this.options.log)
-                  console.log(
-                    'Ending Event: ' +
-                      i +
-                      ' - ' +
-                      details.code +
-                      ' - ' +
-                      (Date.now() - details.lastTimestamp) / 1000,
-                  );
-                this.emit('alarm', details.code, 'Stop', details.index);
-              }
-            }
-            this.activeEvents = {};
-            this.triggerActive = false;
-          } else {
-            // should be the most common result
-            // Nothing interesting happening and we haven't seen any events
-            if (this.options.log) this.emit('alarm', code, action, index);
-          }
-        }
-
-        // if the first instance of an eventIdentifier, lets emit it,
-        // add to activeEvents and set triggerActive
-        else if (
-          typeof this.activeEvents[eventIdentifier] == 'undefined' ||
-          this.activeEvents[eventIdentifier] == null
-        ) {
-          this.activeEvents[eventIdentifier] = {
-            code,
-            index,
-            lastTimestamp: Date.now(),
-          };
-          this.emit('alarm', code, action, index);
-          this.triggerActive = true;
-
-          // known active events
-        } else {
-          if (this.options.log)
-            console.log(
-              '    Skipped Event: ' +
-                code +
-                ' ' +
-                action +
-                ' ' +
-                index +
-                ' ' +
-                count,
-            );
-
-          // Update lastTimestamp
-          this.activeEvents[eventIdentifier] = {
-            code,
-            index,
-            lastTimestamp: Date.now(),
-          };
-
-          // step through activeEvents
-          // if we haven't seen it in more than 2 seconds, lets end it and remove from activeEvents
-          Object.keys(this.activeEvents).forEach((eventIdentifier) => {
-            const details = this.activeEvents[eventIdentifier];
-
-            if ((Date.now() - details.lastTimestamp) / 1000 > 2) {
-              if (this.options.log)
-                console.log(
-                  '    Ending Event: ' +
-                    eventIdentifier +
-                    ' - ' +
-                    details.code +
-                    ' - ' +
-                    (Date.now() - details.lastTimestamp) / 1000,
-                );
-              this.emit('alarm', details.code, 'Stop', details.index);
-              delete this.activeEvents[eventIdentifier];
-            }
-          });
-        }
-      }
-    });
+      });
+    }
   }
 
-  private parseStatus(data: Buffer) {
-    return new Promise<HikVisionDeviceStatus>((resolve, reject) => {
-      this.parser.parseString(data, (err, result) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+  private clearActiveEvents() {
+    Object.keys(this.activeEvents).forEach((id) => {
+      const details = this.activeEvents[id];
+      this.debugLog(
+        `Ending Event: ${id} - ${details.eventType} - ${(Date.now() - details.lastTimestamp) / 1000}`,
+      );
 
-        const deviceStatus = result['DeviceStatus'];
-
-        resolve({
-          deviceUpTime: parseInt(deviceStatus['deviceUpTime'][0]),
-          currentDeviceTime: deviceStatus['currentDeviceTime'][0],
-          cpu: {
-            description:
-              deviceStatus['CPUList'][0]['CPU'][0]['cpuDescription'][0],
-            utilization: parseInt(
-              deviceStatus['CPUList'][0]['CPU'][0]['cpuUtilization'][0],
-            ),
-          },
-          memory: {
-            description:
-              deviceStatus['MemoryList'][0]['Memory'][0][
-                'memoryDescription'
-              ][0],
-            usage: parseInt(
-              deviceStatus['MemoryList'][0]['Memory'][0]['memoryUsage'][0],
-            ),
-            available: parseInt(
-              deviceStatus['MemoryList'][0]['Memory'][0]['memoryAvailable'][0],
-            ),
-          },
-        });
-      });
+      this.emit('alarm', details.eventType, 'Stop', details.channelID);
     });
+
+    this.activeEvents = {};
+    this.triggerActive = false;
+  }
+
+  private debugLog(message?: any, ...optionalParams: any[]) {
+    if (this.options.debug) console.log(message, ...optionalParams);
   }
 }

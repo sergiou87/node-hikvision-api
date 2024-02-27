@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
-import { HikVisionOptions, HikVisionPartialOptions } from './hikvision.types';
+import { HikVisionOptions, HikVisionPartialOptions } from '../types';
+import { PutResponse } from '../responses';
 
 export const parseOptions = (
   options: HikVisionPartialOptions,
@@ -9,14 +10,14 @@ export const parseOptions = (
     port: 80,
     username: '',
     password: '',
-    log: false,
+    debug: false,
     reconnectAfter: 30000,
   };
 
   return {
     username: options.username,
     password: options.password,
-    log: options.log || defaultOptions.log || false,
+    debug: options.debug || defaultOptions.debug || false,
     host: options.host,
     port: parseInt(`${options.port || defaultOptions.port}`),
     reconnectAfter: options.reconnectAfter || defaultOptions.reconnectAfter,
@@ -59,4 +60,16 @@ export const buildDigestHeader = (
     `nonce="${nonce}",uri="${path}",qop="auth",algorithm="MD5",` +
     `response="${response}",nc="${nonceCount}",cnonce="${cnonce}"`
   );
+};
+
+export const validatePutResponse = (response: PutResponse) => {
+  const success =
+    response.statusCode === 1 &&
+    response.statusString === 'OK' &&
+    response.subStatusCode === 'ok';
+
+  return {
+    success,
+    response,
+  };
 };

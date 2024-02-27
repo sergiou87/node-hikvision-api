@@ -11,6 +11,8 @@ Now updated with Typescript and proper ISAPI calls.
 
 ## Status: Work in Progress
 
+The security/encryption process is especially broken
+
 ## Example:
 ```typescript
 import { HikVision } from '@copcart/node-hikvision-api';

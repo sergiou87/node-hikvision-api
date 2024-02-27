@@ -47,6 +47,7 @@ const parseStreamingChannels = (data) => {
 exports.parseStreamingChannels = parseStreamingChannels;
 const parsePutResponse = (data) => {
     const parser = getXMLParser();
+    console.log(data.toString('utf-8'));
     const parsed = parser.parse(data);
     return parsed.ResponseStatus;
 };

@@ -27,8 +27,12 @@ const buildStreamOptions = (channel, channelID) => {
         ignoreAttributes: false,
         attributeNamePrefix: 'attr_',
     });
+    // Hacky fixes start
     channel.id = channelID;
     channel.Video['attr_xmlns'] = '';
+    channel.Video.videoQualityControlType =
+        channel.Video.videoQualityControlType.toLowerCase();
+    // Done with that
     const structure = {
         StreamingChannel: {
             ...channel,

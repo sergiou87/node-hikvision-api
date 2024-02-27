@@ -1,16 +1,35 @@
 import { HikVision } from '../index';
+import { clearTimeout } from 'node:timers';
 
 const camera = new HikVision({
   username: 'admin',
   password: process.argv[3],
   host: process.argv[2],
   debug: true,
+  protocol: 'http',
+  port: 80,
 });
 
+let connectionTimeout: any;
+
+const setConnectionTimeout = () => {
+  if (connectionTimeout) clearTimeout(connectionTimeout);
+
+  console.log('Connection closing in 15 seconds unless an Alarm event occurs');
+  connectionTimeout = setTimeout(() => {
+    camera.close();
+  }, 5000 * 3);
+};
+
 camera.on('connect', () => {
-  camera.getOnvifUsers().then(console.log);
-  camera.getStatus().then(console.log);
-  camera.getStreamingStatus().then(console.log);
+  Promise.all([
+    camera.getOnvifUsers(),
+    camera.getStatus(),
+    camera.getStreamingStatus(),
+  ]).then((result) => {
+    console.log(result);
+    setConnectionTimeout();
+  });
 });
 
 camera.on('alarm', (eventType, eventState, channelID) => {
@@ -36,4 +55,6 @@ camera.on('alarm', (eventType, eventState, channelID) => {
     console.log('Channel ' + channelID + ': Video Blind!');
   if (eventType === 'VideoBlind' && eventState === 'Stop')
     console.log('Channel ' + channelID + ': Video Unblind!');
+
+  setConnectionTimeout();
 });

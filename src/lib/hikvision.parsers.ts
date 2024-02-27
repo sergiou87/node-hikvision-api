@@ -74,6 +74,7 @@ export const parseStreamingChannels = (data: Buffer): StreamingChannel[] => {
 export const parsePutResponse = (data: Buffer) => {
   const parser = getXMLParser();
 
+  console.log(data.toString('utf-8'));
   const parsed: {
     ResponseStatus: PutResponse;
   } = parser.parse(data);

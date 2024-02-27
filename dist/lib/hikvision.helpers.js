@@ -1,15 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validatePutResponse = exports.buildDigestHeader = exports.parseOptions = void 0;
+exports.buildPathURL = exports.validatePutResponse = exports.buildDigestHeader = exports.parseOptions = void 0;
 const crypto = require("crypto");
 const parseOptions = (options) => {
     const defaultOptions = {
         host: '',
         port: 80,
+        protocol: 'http',
         username: '',
         password: '',
         debug: false,
         reconnectAfter: 30000,
+        logger: console.log,
     };
     return {
         username: options.username,
@@ -17,7 +19,9 @@ const parseOptions = (options) => {
         debug: options.debug || defaultOptions.debug || false,
         host: options.host,
         port: parseInt(`${options.port || defaultOptions.port}`),
+        protocol: options.protocol || defaultOptions.protocol,
         reconnectAfter: options.reconnectAfter || defaultOptions.reconnectAfter,
+        logger: options.logger || defaultOptions.logger,
     };
 };
 exports.parseOptions = parseOptions;
@@ -57,3 +61,9 @@ const validatePutResponse = (response) => {
     };
 };
 exports.validatePutResponse = validatePutResponse;
+const buildPathURL = (items) => {
+    if (items.length > 0)
+        return `/${items.join('/')}`;
+    return '';
+};
+exports.buildPathURL = buildPathURL;

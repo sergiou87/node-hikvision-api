@@ -5,7 +5,7 @@ export declare class HikVision extends EventEmitter {
     private triggerActive;
     private usingAuthDigest;
     private isAuthenticated;
-    private authHeader;
+    private authHeaderValue;
     private activeEvents;
     private client;
     private connectionCount;
@@ -18,6 +18,10 @@ export declare class HikVision extends EventEmitter {
      * Get device status
      */
     getStatus(): Promise<DeviceStatus>;
+    /**
+     * Check if in day mode
+     * @param channel defaults to 101
+     */
     isDayMode(channel?: number): Promise<any>;
     /**
      * Get streaming channels
@@ -58,14 +62,27 @@ export declare class HikVision extends EventEmitter {
         success: boolean;
         response: import("./responses").PutResponse;
     }>;
+    /**
+     * Get current ONVIF users
+     */
     getOnvifUsers(): Promise<import("./types").OnvifUser[]>;
+    /**
+     * Delete an ONVIF user by ID
+     * @param userID
+     */
     deleteOnvifUser(userID: number): Promise<{
         success: boolean;
         response: import("./responses").PutResponse;
     }>;
+    /**
+     * Add an ONVIF user
+     * @param username
+     * @param password
+     * @param id - Must be unique
+     * @param userType - OnvifUserType
+     */
     addOnvifUser(username: string, password: string, id: number, userType?: OnvifUserType): Promise<any>;
     close(): void;
-    private performRequest;
     private connect;
     private handleConnection;
     private handleDisconnect;
@@ -73,5 +90,10 @@ export declare class HikVision extends EventEmitter {
     private handleAuthResponse;
     private handleAlert;
     private clearActiveEvents;
+    private getStreamingURL;
+    private getSystemURL;
+    private getSecurityURL;
+    private getRequestURL;
+    private performRequest;
     private debugLog;
 }

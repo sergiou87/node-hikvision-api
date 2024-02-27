@@ -6,3 +6,4 @@ export declare const validatePutResponse: (response: PutResponse) => {
     success: boolean;
     response: PutResponse;
 };
+export declare const buildPathURL: (items: any[]) => string;

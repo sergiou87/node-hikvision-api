@@ -21,6 +21,7 @@ import {
   buildDigestHeader,
   parseOptions,
   validatePutResponse,
+  buildPathURL,
 } from './lib';
 import { Method } from 'axios';
 import {
@@ -39,7 +40,7 @@ export class HikVision extends EventEmitter {
   private triggerActive = false;
   private usingAuthDigest = false;
   private isAuthenticated = false;
-  private authHeader: string = '';
+  private authHeaderValue: string = '';
   private activeEvents: { [key: string]: CameraEvent } = {};
   private client: net.Socket;
   private connectionCount = 0;
@@ -65,16 +66,18 @@ export class HikVision extends EventEmitter {
    * Get device status
    */
   async getStatus(): Promise<DeviceStatus> {
-    const url = `http://${this.options.host}/ISAPI/System/status`;
-
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(this.getSystemURL('status'));
     return parseStatus(data);
   }
 
+  /**
+   * Check if in day mode
+   * @param channel defaults to 101
+   */
   isDayMode(channel = 101) {
-    const url = `http://${this.options.host}/ISAPI/Image/channels/${channel}/ISPMode`;
-
-    return this.performRequest(url);
+    return this.performRequest(
+      this.getRequestURL(['Image', 'channels', channel, 'ISPMode']),
+    );
   }
 
   // MARK: Streaming
@@ -83,8 +86,7 @@ export class HikVision extends EventEmitter {
    * Get streaming channels
    */
   async getStreamingChannels(): Promise<StreamingChannel[]> {
-    const url = `http://${this.options.host}/ISAPI/Streaming/channels`;
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(this.getStreamingURL('channels'));
     return parseStreamingChannels(data);
   }
 
@@ -92,8 +94,7 @@ export class HikVision extends EventEmitter {
    * Get streaming status
    */
   async getStreamingStatus(): Promise<StreamingStatus> {
-    const url = `http://${this.options.host}/ISAPI/Streaming/status`;
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(this.getStreamingURL('status'));
     return parseStreamingStatus(data);
   }
 
@@ -102,8 +103,9 @@ export class HikVision extends EventEmitter {
    * @param channel
    */
   async getStreamingCapabilities(channel = 101) {
-    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}/capabilities`;
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(
+      this.getStreamingURL(['channels', channel, 'capabilities']),
+    );
     return parseGeneric(data);
   }
 
@@ -112,8 +114,9 @@ export class HikVision extends EventEmitter {
    * @param channel
    */
   async getStreamingChannel(channel = 101) {
-    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(
+      this.getStreamingURL(['channels', channel]),
+    );
     return parseStreamingChannel(data);
   }
 
@@ -126,9 +129,8 @@ export class HikVision extends EventEmitter {
     channel = 101,
     streamingChannel: StreamingChannel,
   ) {
-    const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
     const data = await this.performRequest(
-      url,
+      this.getStreamingURL(['channels', channel]),
       'PUT',
       buildStreamOptions(streamingChannel, channel),
     );
@@ -142,8 +144,10 @@ export class HikVision extends EventEmitter {
    * Get integrations for services
    */
   async getIntegrations() {
-    const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
-    const data = await this.performRequest(url);
+    const data = await this.performRequest(
+      this.getSystemURL(['Network', 'Integrate']),
+    );
+
     return parseIntegrations(data);
   }
 
@@ -152,36 +156,61 @@ export class HikVision extends EventEmitter {
    * @param integrations
    */
   async updateIntegrations(integrations: Integrations) {
-    const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
     const xml = buildIntegrations(integrations);
-    const data = await this.performRequest(url, 'PUT', xml);
+    const data = await this.performRequest(
+      this.getSystemURL(['Network', 'Integrate']),
+      'PUT',
+      xml,
+    );
+
     return validatePutResponse(parsePutResponse(data));
   }
 
   // MARK: Onvif
 
+  /**
+   * Get current ONVIF users
+   */
   async getOnvifUsers() {
-    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
+    const data = await this.performRequest(
+      this.getSecurityURL(['ONVIF', 'users'], { security: 0 }),
+    );
 
-    const data = await this.performRequest(url);
     return parseUsersList(data);
   }
 
+  /**
+   * Delete an ONVIF user by ID
+   * @param userID
+   */
   async deleteOnvifUser(userID: number) {
-    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users/${userID}`;
-    const data = await this.performRequest(url, 'DELETE');
+    const data = await this.performRequest(
+      this.getSecurityURL(['ONVIF', 'users', userID]),
+      'DELETE',
+    );
+
     return validatePutResponse(parsePutResponse(data));
   }
 
+  /**
+   * Add an ONVIF user
+   * @param username
+   * @param password
+   * @param id - Must be unique
+   * @param userType - OnvifUserType
+   */
   async addOnvifUser(
     username: string,
     password: string,
     id: number,
     userType: OnvifUserType = 'mediaUser',
   ) {
-    const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
     const user = buildOnvifUser(username, password, id, userType);
-    const data = await this.performRequest(url, 'POST', user);
+    const data = await this.performRequest(
+      this.getSecurityURL(['ONVIF', 'users'], { security: 0 }),
+      'POST',
+      user,
+    );
 
     return parseGeneric(data);
   }
@@ -192,48 +221,31 @@ export class HikVision extends EventEmitter {
     this.client.destroy();
   }
 
-  private async performRequest(
-    url: string,
-    method: Method = 'GET',
-    data?: any,
-  ) {
-    const digestAuth = new AxiosDigestAuth({
-      username: this.options.username,
-      password: this.options.password,
-    });
-
-    const result = await digestAuth.request({
-      method,
-      url,
-      data,
-    });
-
-    return result.data as any;
-  }
+  // MARK: Private
 
   private connect() {
     const options = this.options;
 
-    if (this.authHeader.length === 0) {
+    if (this.authHeaderValue.length === 0) {
       const bString = Buffer.from(
         options.username + ':' + options.password,
       ).toString('base64');
-      this.authHeader = `Authorization: Basic ${bString}`;
+      this.authHeaderValue = `Basic ${bString}`;
     }
 
     this.client = net.connect(
       { host: options.host, port: options.port },
       () => {
-        const header =
-          'GET /ISAPI/Event/notification/alertStream HTTP/1.1\r\n' +
-          'Host: ' +
-          options.host +
-          ':' +
-          options.port +
-          '\r\n' +
-          this.authHeader +
-          '\r\n' +
-          'Accept: multipart/x-mixed-replace\r\n\r\n';
+        const path = ['ISAPI', 'Event', 'notification', 'alertStream'];
+
+        const headerItems = [
+          `GET ${buildPathURL(path)} HTTP/1.1`,
+          `Host: ${options.host}:${options.port}`,
+          `Authorization: ${this.authHeaderValue}`,
+          'Accept: multipart/x-mixed-replace',
+        ];
+
+        const header = `${headerItems.join('\r\n')}\r\n\r\n`;
 
         this.connectionCount += 1;
         this.client.write(header);
@@ -300,14 +312,13 @@ export class HikVision extends EventEmitter {
 
     if (!authHeader || authHeader.length === 0) return;
 
-    const authHeaderContent = buildDigestHeader(
+    const path = ['ISAPI', 'Event', 'notification', 'alertStream'];
+    this.authHeaderValue = buildDigestHeader(
       authHeader,
-      '/ISAPI/Event/notification/alertStream',
+      buildPathURL(path),
       this.options.username,
       this.options.password,
     );
-
-    this.authHeader = `Authorization: ${authHeaderContent}`;
 
     this.usingAuthDigest = true;
   }
@@ -385,6 +396,76 @@ export class HikVision extends EventEmitter {
 
     this.activeEvents = {};
     this.triggerActive = false;
+  }
+
+  private getStreamingURL(
+    parts: (string | number)[] | string = [],
+    query: { [key: string | number]: any } | null = null,
+  ) {
+    return this.getRequestURL(
+      ['Streaming', ...(Array.isArray(parts) ? parts : [parts])],
+      query,
+    );
+  }
+
+  private getSystemURL(
+    parts: (string | number)[] | string = [],
+    query: { [key: string | number]: any } | null = null,
+  ) {
+    return this.getRequestURL(
+      ['System', ...(Array.isArray(parts) ? parts : [parts])],
+      query,
+    );
+  }
+
+  private getSecurityURL(
+    parts: (string | number)[] | string = [],
+    query: { [key: string | number]: any } | null = null,
+  ) {
+    return this.getRequestURL(
+      ['Security', ...(Array.isArray(parts) ? parts : [parts])],
+      query,
+    );
+  }
+
+  private getRequestURL(
+    parts: (string | number)[] = [],
+    query: { [key: string | number]: any } | null = null,
+  ) {
+    let url = `${this.options.protocol}://${this.options.host}:${this.options.port}/ISAPI${buildPathURL(parts)}`;
+
+    if (query !== null) {
+      const queryParams = Object.keys(query)
+        .map((k) => `${k}=${JSON.stringify(query[k])}`)
+        .join('&');
+
+      url = `${url}?${queryParams}`;
+    }
+
+    return url;
+  }
+
+  private async performRequest(
+    url: string,
+    method: Method = 'GET',
+    data?: any,
+  ) {
+    const digestAuth = new AxiosDigestAuth({
+      username: this.options.username,
+      password: this.options.password,
+    });
+
+    const result = await digestAuth.request({
+      method,
+      url,
+      data,
+    });
+
+    if (!data) this.debugLog(`Sending ${method} request to URL`, url);
+    else
+      this.debugLog(`Sending ${method} request to URL`, url, 'with data', data);
+
+    return result.data as any;
   }
 
   private debugLog(message?: any, ...optionalParams: any[]) {

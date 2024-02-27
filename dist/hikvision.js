@@ -16,7 +16,7 @@ class HikVision extends node_events_1.EventEmitter {
         this.triggerActive = false;
         this.usingAuthDigest = false;
         this.isAuthenticated = false;
-        this.authHeader = '';
+        this.authHeaderValue = '';
         this.activeEvents = {};
         this.connectionCount = 0;
         this.disconnecting = false;
@@ -28,29 +28,29 @@ class HikVision extends node_events_1.EventEmitter {
      * Get device status
      */
     async getStatus() {
-        const url = `http://${this.options.host}/ISAPI/System/status`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getSystemURL('status'));
         return (0, lib_1.parseStatus)(data);
     }
+    /**
+     * Check if in day mode
+     * @param channel defaults to 101
+     */
     isDayMode(channel = 101) {
-        const url = `http://${this.options.host}/ISAPI/Image/channels/${channel}/ISPMode`;
-        return this.performRequest(url);
+        return this.performRequest(this.getRequestURL(['Image', 'channels', channel, 'ISPMode']));
     }
     // MARK: Streaming
     /**
      * Get streaming channels
      */
     async getStreamingChannels() {
-        const url = `http://${this.options.host}/ISAPI/Streaming/channels`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getStreamingURL('channels'));
         return (0, lib_1.parseStreamingChannels)(data);
     }
     /**
      * Get streaming status
      */
     async getStreamingStatus() {
-        const url = `http://${this.options.host}/ISAPI/Streaming/status`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getStreamingURL('status'));
         return (0, lib_1.parseStreamingStatus)(data);
     }
     /**
@@ -58,8 +58,7 @@ class HikVision extends node_events_1.EventEmitter {
      * @param channel
      */
     async getStreamingCapabilities(channel = 101) {
-        const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}/capabilities`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getStreamingURL(['channels', channel, 'capabilities']));
         return (0, lib_1.parseGeneric)(data);
     }
     /**
@@ -67,8 +66,7 @@ class HikVision extends node_events_1.EventEmitter {
      * @param channel
      */
     async getStreamingChannel(channel = 101) {
-        const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getStreamingURL(['channels', channel]));
         return (0, lib_1.parseStreamingChannel)(data);
     }
     /**
@@ -77,8 +75,7 @@ class HikVision extends node_events_1.EventEmitter {
      * @param streamingChannel
      */
     async updateStreamingChannel(channel = 101, streamingChannel) {
-        const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
-        const data = await this.performRequest(url, 'PUT', (0, lib_1.buildStreamOptions)(streamingChannel, channel));
+        const data = await this.performRequest(this.getStreamingURL(['channels', channel]), 'PUT', (0, lib_1.buildStreamOptions)(streamingChannel, channel));
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
     // MARK: Integrations
@@ -86,8 +83,7 @@ class HikVision extends node_events_1.EventEmitter {
      * Get integrations for services
      */
     async getIntegrations() {
-        const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getSystemURL(['Network', 'Integrate']));
         return (0, lib_1.parseIntegrations)(data);
     }
     /**
@@ -95,26 +91,36 @@ class HikVision extends node_events_1.EventEmitter {
      * @param integrations
      */
     async updateIntegrations(integrations) {
-        const url = `http://${this.options.host}/ISAPI/System/Network/Integrate`;
         const xml = (0, lib_1.buildIntegrations)(integrations);
-        const data = await this.performRequest(url, 'PUT', xml);
+        const data = await this.performRequest(this.getSystemURL(['Network', 'Integrate']), 'PUT', xml);
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
     // MARK: Onvif
+    /**
+     * Get current ONVIF users
+     */
     async getOnvifUsers() {
-        const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
-        const data = await this.performRequest(url);
+        const data = await this.performRequest(this.getSecurityURL(['ONVIF', 'users'], { security: 0 }));
         return (0, lib_1.parseUsersList)(data);
     }
+    /**
+     * Delete an ONVIF user by ID
+     * @param userID
+     */
     async deleteOnvifUser(userID) {
-        const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users/${userID}`;
-        const data = await this.performRequest(url, 'DELETE');
+        const data = await this.performRequest(this.getSecurityURL(['ONVIF', 'users', userID]), 'DELETE');
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
+    /**
+     * Add an ONVIF user
+     * @param username
+     * @param password
+     * @param id - Must be unique
+     * @param userType - OnvifUserType
+     */
     async addOnvifUser(username, password, id, userType = 'mediaUser') {
-        const url = `http://${this.options.host}/ISAPI/Security/ONVIF/users?security=0`;
         const user = (0, lib_1.buildOnvifUser)(username, password, id, userType);
-        const data = await this.performRequest(url, 'POST', user);
+        const data = await this.performRequest(this.getSecurityURL(['ONVIF', 'users'], { security: 0 }), 'POST', user);
         return (0, lib_1.parseGeneric)(data);
     }
     close() {
@@ -122,34 +128,22 @@ class HikVision extends node_events_1.EventEmitter {
         this.client.end();
         this.client.destroy();
     }
-    async performRequest(url, method = 'GET', data) {
-        const digestAuth = new axios_digest_auth_1.default({
-            username: this.options.username,
-            password: this.options.password,
-        });
-        const result = await digestAuth.request({
-            method,
-            url,
-            data,
-        });
-        return result.data;
-    }
+    // MARK: Private
     connect() {
         const options = this.options;
-        if (this.authHeader.length === 0) {
+        if (this.authHeaderValue.length === 0) {
             const bString = Buffer.from(options.username + ':' + options.password).toString('base64');
-            this.authHeader = `Authorization: Basic ${bString}`;
+            this.authHeaderValue = `Basic ${bString}`;
         }
         this.client = net.connect({ host: options.host, port: options.port }, () => {
-            const header = 'GET /ISAPI/Event/notification/alertStream HTTP/1.1\r\n' +
-                'Host: ' +
-                options.host +
-                ':' +
-                options.port +
-                '\r\n' +
-                this.authHeader +
-                '\r\n' +
-                'Accept: multipart/x-mixed-replace\r\n\r\n';
+            const path = ['ISAPI', 'Event', 'notification', 'alertStream'];
+            const headerItems = [
+                `GET ${(0, lib_1.buildPathURL)(path)} HTTP/1.1`,
+                `Host: ${options.host}:${options.port}`,
+                `Authorization: ${this.authHeaderValue}`,
+                'Accept: multipart/x-mixed-replace',
+            ];
+            const header = `${headerItems.join('\r\n')}\r\n\r\n`;
             this.connectionCount += 1;
             this.client.write(header);
             this.client.setKeepAlive(true, 1000);
@@ -201,8 +195,8 @@ class HikVision extends node_events_1.EventEmitter {
         const authHeader = rawResponse.find((line) => line.toLowerCase().includes('www-authenticate'));
         if (!authHeader || authHeader.length === 0)
             return;
-        const authHeaderContent = (0, lib_1.buildDigestHeader)(authHeader, '/ISAPI/Event/notification/alertStream', this.options.username, this.options.password);
-        this.authHeader = `Authorization: ${authHeaderContent}`;
+        const path = ['ISAPI', 'Event', 'notification', 'alertStream'];
+        this.authHeaderValue = (0, lib_1.buildDigestHeader)(authHeader, (0, lib_1.buildPathURL)(path), this.options.username, this.options.password);
         this.usingAuthDigest = true;
     }
     handleAlert(alert) {
@@ -266,6 +260,41 @@ class HikVision extends node_events_1.EventEmitter {
         });
         this.activeEvents = {};
         this.triggerActive = false;
+    }
+    getStreamingURL(parts = [], query = null) {
+        return this.getRequestURL(['Streaming', ...(Array.isArray(parts) ? parts : [parts])], query);
+    }
+    getSystemURL(parts = [], query = null) {
+        return this.getRequestURL(['System', ...(Array.isArray(parts) ? parts : [parts])], query);
+    }
+    getSecurityURL(parts = [], query = null) {
+        return this.getRequestURL(['Security', ...(Array.isArray(parts) ? parts : [parts])], query);
+    }
+    getRequestURL(parts = [], query = null) {
+        let url = `${this.options.protocol}://${this.options.host}:${this.options.port}/ISAPI${(0, lib_1.buildPathURL)(parts)}`;
+        if (query !== null) {
+            const queryParams = Object.keys(query)
+                .map((k) => `${k}=${JSON.stringify(query[k])}`)
+                .join('&');
+            url = `${url}?${queryParams}`;
+        }
+        return url;
+    }
+    async performRequest(url, method = 'GET', data) {
+        const digestAuth = new axios_digest_auth_1.default({
+            username: this.options.username,
+            password: this.options.password,
+        });
+        const result = await digestAuth.request({
+            method,
+            url,
+            data,
+        });
+        if (!data)
+            this.debugLog(`Sending ${method} request to URL`, url);
+        else
+            this.debugLog(`Sending ${method} request to URL`, url, 'with data', data);
+        return result.data;
     }
     debugLog(message, ...optionalParams) {
         if (this.options.debug)

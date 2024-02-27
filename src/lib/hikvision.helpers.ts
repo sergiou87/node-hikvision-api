@@ -8,10 +8,12 @@ export const parseOptions = (
   const defaultOptions: HikVisionOptions = {
     host: '',
     port: 80,
+    protocol: 'http',
     username: '',
     password: '',
     debug: false,
     reconnectAfter: 30000,
+    logger: console.log,
   };
 
   return {
@@ -20,7 +22,9 @@ export const parseOptions = (
     debug: options.debug || defaultOptions.debug || false,
     host: options.host,
     port: parseInt(`${options.port || defaultOptions.port}`),
+    protocol: options.protocol || defaultOptions.protocol,
     reconnectAfter: options.reconnectAfter || defaultOptions.reconnectAfter,
+    logger: options.logger || defaultOptions.logger,
   };
 };
 
@@ -72,4 +76,10 @@ export const validatePutResponse = (response: PutResponse) => {
     success,
     response,
   };
+};
+
+export const buildPathURL = (items: any[]) => {
+  if (items.length > 0) return `/${items.join('/')}`;
+
+  return '';
 };

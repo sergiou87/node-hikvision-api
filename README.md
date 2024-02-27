@@ -22,6 +22,27 @@ The security/encryption process is especially broken
 * Checking for day mode/night mode
 * Camera alarm handling (see below)
 
+### Encryption:
+
+Though HikVision's ISAPI protocol supports security using URL parameters, I was unable to get it working properly.
+Anyone is welcome to pick up where I left off in `src/lib/hikvision.encryption.ts`.
+
+The ISAPI [spec](./repo/isapi.pdf) includes the full steps in Chapter 3, but this is the general idea:
+![ISAPI encryption steps](./repo/enc-steps-2.png)
+![ISAPI encryption steps](./repo/enc-steps.png)
+
+**Without encryption** one should _not_ use this library to pass sensitive data _at all_
+
+
+### Notes
+
+**There are major differences between this library (which was forked) and the original one**
+
+For instance, the previous version of this library had PTZ functionalities,
+however this is not within the scope of this library. In my own opinion, you should be using
+ONVIF for those functions.
+
+
 ## Example:
 ```typescript
 import { HikVision } from '@copcart/node-hikvision-api';
@@ -74,9 +95,3 @@ You can run a very similar example available within the repository:
 ```shell
 ts-node src/examples/01-basic.ts 10.1.8.240 password  
  ```
-
-## Major Differences
-
-The previous version of this library had PTZ functionalities, 
-however this is not within the scope of this library in my own opinion, you should be using
-ONVIF for those functions.

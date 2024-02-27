@@ -4,9 +4,42 @@
 [![npm](https://img.shields.io/npm/v/npm.svg)]()
 [![node](https://img.shields.io/node/v/gh-badges.svg)]()
 
-NodeJS Module for communication with HikVision IP Cameras.
+A Node.js Module for communication with HikVision IP Cameras, now updated with Typescript and proper ISAPI calls.
 
-Now updated with Typescript and proper ISAPI calls.
+
+## Getting Started:
+
+Installing:
+```shell
+npm i @copcart/node-hikvision-api
+```
+
+Importing:
+```typescript
+import { HikVision } from '@copcart/node-hikvision-api';
+```
+
+Configuring:
+```typescript
+const camera = new HikVision({
+  username: 'admin',     // Required
+  password: 'password',  // Required
+  host: '192.168.1.64',  // Required
+  debug: true,           // Optional, defaults to false
+  port: 80,              // Optional, defaults to 80
+  reconnectAfter: 30000, // Optional, defaults to 30000 (30s)
+  protocol: 'http',      // Optional, defaults to 'http'
+});
+```
+
+
+Additionally, you can run examples (available in `examples/`) like shown:
+
+```shell
+npm run example:basic CAMERA_IP CAMERA_PASSWORD CAMERA_USERNAME  
+ ```
+
+There are more examples available as npm scripts, so please check package.json
 
 
 ## Status
@@ -50,39 +83,3 @@ ONVIF for those functions.
 * Return PTZ capabilities
 * Basic error handling (right now the axios ref is thrown all the way up the stack)
 * Clean up alarm notification handling
-
-
-## Getting Started:
-
-Installing:
-```shell
-npm i @copcart/node-hikvision-api
-```
-
-Importing:
-```typescript
-import { HikVision } from '@copcart/node-hikvision-api';
-```
-
-Configuring:
-```typescript
-const camera = new HikVision({
-  username: 'admin',     // Required
-  password: 'password',  // Required
-  host: '192.168.1.64',  // Required
-  debug: true,           // Optional, defaults to false
-  port: 80,              // Optional, defaults to 80
-  reconnectAfter: 30000, // Optional, defaults to 30000 (30s)
-  protocol: 'http',      // Optional, defaults to 'http'
-});
-```
-
-
-Additionally, you can run examples (available in `examples/`) like shown:
-
-```shell
-npm run example:basic CAMERA_IP CAMERA_PASSWORD CAMERA_USERNAME  
- ```
-
-There are more examples available as npm scripts, so please check package.json
-

@@ -61,6 +61,11 @@ camera.on('alarm', (eventType, eventState, channelID) => {
 });
 ```
 
+You can run a very similar example available within the repository:
+```shell
+ts-node src/examples/01-camera.ts 10.1.8.240 password  
+ ```
+
 ## Major Differences
 
 The previous version of this library had PTZ functionalities, 

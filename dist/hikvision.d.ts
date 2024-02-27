@@ -106,8 +106,14 @@ export declare class HikVision extends EventEmitter {
     updateNetworkInterface(id: number, networkInterface: NetworkInterface): Promise<{
         success: boolean;
     }>;
+    /**
+     * Close connection to the camera
+     */
     close(): void;
-    private connect;
+    /**
+     * Connect to the camera for events
+     */
+    connect(): void;
     private handleConnection;
     private handleDisconnect;
     private handleError;

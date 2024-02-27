@@ -22,7 +22,6 @@ class HikVision extends node_events_1.EventEmitter {
         this.connectionCount = 0;
         this.disconnecting = false;
         this.options = (0, lib_1.parseOptions)(options);
-        this.connect();
     }
     // MARK: General
     /**
@@ -159,12 +158,17 @@ class HikVision extends node_events_1.EventEmitter {
         const data = await this.performRequest(this.getSystemURL(['Network', 'interfaces', id]), 'PUT', (0, lib_1.buildNetworkInterface)(networkInterface));
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
+    /**
+     * Close connection to the camera
+     */
     close() {
         this.disconnecting = true;
         this.client.end();
         this.client.destroy();
     }
-    // MARK: Private
+    /**
+     * Connect to the camera for events
+     */
     connect() {
         const options = this.options;
         if (this.authHeaderValue.length === 0) {
@@ -209,6 +213,7 @@ class HikVision extends node_events_1.EventEmitter {
             this.handleError(err);
         });
     }
+    // MARK: Private
     handleConnection() {
         if (this.isAuthenticated || this.usingAuthDigest) {
             this.debugLog('Connected to ' + this.options.host + ':' + this.options.port);

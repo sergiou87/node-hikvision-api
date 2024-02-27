@@ -1,6 +1,6 @@
 {
   "name": "@copcart/node-hikvision-api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "HikVision HTTP ISAPI Module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,13 +8,11 @@
     "@mhoc/axios-digest-auth": "^0.8.0",
     "axios": "^1.6.7",
     "fast-xml-parser": "^4.3.5",
-    "net-keepalive": "^3.0.1",
-    "xml2js": "^0.6.2"
+    "net-keepalive": "^3.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
-    "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",

@@ -46,14 +46,14 @@ export type StreamingChannel = {
         maxFrameRate: number;
         keyFrameInterval: number;
         snapShotImageType: string;
-        H264Profile: string;
+        H264Profile?: string;
         GovLength: number;
         SVC: {
             enabled: boolean;
         };
         PacketType: Array<string>;
         smoothing: number;
-        H265Profile: string;
+        H265Profile?: string;
         SmartCodec: {
             enabled: boolean;
         };

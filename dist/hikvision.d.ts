@@ -9,6 +9,7 @@ export declare class HikVision extends EventEmitter {
     private activeEvents;
     private client;
     private connectionCount;
+    private disconnecting;
     private readonly options;
     private _connected;
     get connected(): boolean;
@@ -43,9 +44,6 @@ export declare class HikVision extends EventEmitter {
      */
     updateStreamingChannel(channel: number, streamingChannel: StreamingChannel): Promise<{
         success: boolean;
-        /**
-         * Get streaming status
-         */
         response: import("./responses").PutResponse;
     }>;
     /**
@@ -58,20 +56,15 @@ export declare class HikVision extends EventEmitter {
      */
     updateIntegrations(integrations: Integrations): Promise<{
         success: boolean;
-        /**
-         * Get streaming status
-         */
         response: import("./responses").PutResponse;
     }>;
     getOnvifUsers(): Promise<import("./types").OnvifUser[]>;
     deleteOnvifUser(userID: number): Promise<{
         success: boolean;
-        /**
-         * Get streaming status
-         */
         response: import("./responses").PutResponse;
     }>;
     addOnvifUser(username: string, password: string, id: number, userType?: OnvifUserType): Promise<any>;
+    close(): void;
     private performRequest;
     private connect;
     private handleConnection;

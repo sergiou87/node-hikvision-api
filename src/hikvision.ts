@@ -43,6 +43,7 @@ export class HikVision extends EventEmitter {
   private activeEvents: { [key: string]: CameraEvent } = {};
   private client: net.Socket;
   private connectionCount = 0;
+  private disconnecting = false;
   private readonly options: HikVisionOptions;
   private _connected: boolean;
 
@@ -70,7 +71,7 @@ export class HikVision extends EventEmitter {
     return parseStatus(data);
   }
 
-  isDayMode(channel = 1) {
+  isDayMode(channel = 101) {
     const url = `http://${this.options.host}/ISAPI/Image/channels/${channel}/ISPMode`;
 
     return this.performRequest(url);
@@ -100,7 +101,7 @@ export class HikVision extends EventEmitter {
    * Get the capabilities for a channel
    * @param channel
    */
-  async getStreamingCapabilities(channel = 1) {
+  async getStreamingCapabilities(channel = 101) {
     const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}/capabilities`;
     const data = await this.performRequest(url);
     return parseGeneric(data);
@@ -110,7 +111,7 @@ export class HikVision extends EventEmitter {
    * Get a specific channel
    * @param channel
    */
-  async getStreamingChannel(channel = 1) {
+  async getStreamingChannel(channel = 101) {
     const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
     const data = await this.performRequest(url);
     return parseStreamingChannel(data);
@@ -122,14 +123,14 @@ export class HikVision extends EventEmitter {
    * @param streamingChannel
    */
   async updateStreamingChannel(
-    channel = 1,
+    channel = 101,
     streamingChannel: StreamingChannel,
   ) {
     const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
     const data = await this.performRequest(
       url,
       'PUT',
-      buildStreamOptions(streamingChannel),
+      buildStreamOptions(streamingChannel, channel),
     );
 
     return validatePutResponse(parsePutResponse(data));
@@ -183,6 +184,12 @@ export class HikVision extends EventEmitter {
     const data = await this.performRequest(url, 'POST', user);
 
     return parseGeneric(data);
+  }
+
+  close() {
+    this.disconnecting = true;
+    this.client.end();
+    this.client.destroy();
   }
 
   private async performRequest(
@@ -244,14 +251,15 @@ export class HikVision extends EventEmitter {
 
     this.client.on('close', () => {
       // Try to reconnect after specified time frame (default 30 seconds)
-      if (this.connectionCount <= 2) {
+      if (this.connectionCount < 2) {
         this.connect();
         return;
       }
 
-      setTimeout(() => {
-        this.connect();
-      }, options.reconnectAfter);
+      if (!this.disconnecting)
+        setTimeout(() => {
+          this.connect();
+        }, options.reconnectAfter);
 
       this.handleDisconnect();
     });

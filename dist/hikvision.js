@@ -19,6 +19,7 @@ class HikVision extends node_events_1.EventEmitter {
         this.authHeader = '';
         this.activeEvents = {};
         this.connectionCount = 0;
+        this.disconnecting = false;
         this.options = (0, lib_1.parseOptions)(options);
         this.connect();
     }
@@ -31,7 +32,7 @@ class HikVision extends node_events_1.EventEmitter {
         const data = await this.performRequest(url);
         return (0, lib_1.parseStatus)(data);
     }
-    isDayMode(channel = 1) {
+    isDayMode(channel = 101) {
         const url = `http://${this.options.host}/ISAPI/Image/channels/${channel}/ISPMode`;
         return this.performRequest(url);
     }
@@ -56,7 +57,7 @@ class HikVision extends node_events_1.EventEmitter {
      * Get the capabilities for a channel
      * @param channel
      */
-    async getStreamingCapabilities(channel = 1) {
+    async getStreamingCapabilities(channel = 101) {
         const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}/capabilities`;
         const data = await this.performRequest(url);
         return (0, lib_1.parseGeneric)(data);
@@ -65,7 +66,7 @@ class HikVision extends node_events_1.EventEmitter {
      * Get a specific channel
      * @param channel
      */
-    async getStreamingChannel(channel = 1) {
+    async getStreamingChannel(channel = 101) {
         const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
         const data = await this.performRequest(url);
         return (0, lib_1.parseStreamingChannel)(data);
@@ -75,9 +76,9 @@ class HikVision extends node_events_1.EventEmitter {
      * @param channel
      * @param streamingChannel
      */
-    async updateStreamingChannel(channel = 1, streamingChannel) {
+    async updateStreamingChannel(channel = 101, streamingChannel) {
         const url = `http://${this.options.host}/ISAPI/Streaming/channels/${channel}`;
-        const data = await this.performRequest(url, 'PUT', (0, lib_1.buildStreamOptions)(streamingChannel));
+        const data = await this.performRequest(url, 'PUT', (0, lib_1.buildStreamOptions)(streamingChannel, channel));
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
     // MARK: Integrations
@@ -115,6 +116,11 @@ class HikVision extends node_events_1.EventEmitter {
         const user = (0, lib_1.buildOnvifUser)(username, password, id, userType);
         const data = await this.performRequest(url, 'POST', user);
         return (0, lib_1.parseGeneric)(data);
+    }
+    close() {
+        this.disconnecting = true;
+        this.client.end();
+        this.client.destroy();
     }
     async performRequest(url, method = 'GET', data) {
         const digestAuth = new axios_digest_auth_1.default({
@@ -159,13 +165,14 @@ class HikVision extends node_events_1.EventEmitter {
         });
         this.client.on('close', () => {
             // Try to reconnect after specified time frame (default 30 seconds)
-            if (this.connectionCount <= 2) {
+            if (this.connectionCount < 2) {
                 this.connect();
                 return;
             }
-            setTimeout(() => {
-                this.connect();
-            }, options.reconnectAfter);
+            if (!this.disconnecting)
+                setTimeout(() => {
+                    this.connect();
+                }, options.reconnectAfter);
             this.handleDisconnect();
         });
         this.client.on('error', (err) => {

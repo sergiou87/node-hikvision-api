@@ -20,17 +20,30 @@ export const buildIntegrations = (integrations: Integrations) => {
 /**
  * Build video stream options
  * @param channel
+ * @param channelID
  */
-export const buildStreamOptions = (channel: StreamingChannel) => {
+export const buildStreamOptions = (
+  channel: StreamingChannel,
+  channelID: number,
+) => {
   const builder = new XMLBuilder({
-    format: true,
+    format: false,
+    ignoreAttributes: false,
+    attributeNamePrefix: 'attr_',
   });
 
+  channel.id = channelID;
+  channel.Video['attr_xmlns'] = '';
+
   const structure = {
-    StreamingChannel: channel,
+    StreamingChannel: {
+      ...channel,
+      attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
+      attr_version: '2.0',
+    },
   };
 
-  return builder.build(structure);
+  return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
 };
 
 /**

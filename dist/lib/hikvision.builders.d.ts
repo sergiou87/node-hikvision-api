@@ -7,8 +7,9 @@ export declare const buildIntegrations: (integrations: Integrations) => any;
 /**
  * Build video stream options
  * @param channel
+ * @param channelID
  */
-export declare const buildStreamOptions: (channel: StreamingChannel) => any;
+export declare const buildStreamOptions: (channel: StreamingChannel, channelID: number) => string;
 /**
  * @param username
  * @param password

@@ -35,8 +35,9 @@ class HikVision extends node_events_1.EventEmitter {
      * Check if in day mode
      * @param channel defaults to 101
      */
-    isDayMode(channel = 101) {
-        return this.performRequest(this.getRequestURL(['Image', 'channels', channel, 'ISPMode']));
+    async isDayMode(channel = 101) {
+        const data = await this.performRequest(this.getRequestURL(['Image', 'channels', channel, 'ISPMode']));
+        return (0, lib_1.parseGeneric)(data);
     }
     // MARK: Streaming
     /**
@@ -59,7 +60,7 @@ class HikVision extends node_events_1.EventEmitter {
      */
     async getStreamingCapabilities(channel = 101) {
         const data = await this.performRequest(this.getStreamingURL(['channels', channel, 'capabilities']));
-        return (0, lib_1.parseGeneric)(data);
+        return (0, lib_1.parseCapabilities)(data);
     }
     /**
      * Get a specific channel
@@ -122,6 +123,31 @@ class HikVision extends node_events_1.EventEmitter {
         const user = (0, lib_1.buildOnvifUser)(username, password, id, userType);
         const data = await this.performRequest(this.getSecurityURL(['ONVIF', 'users'], { security: 0 }), 'POST', user);
         return (0, lib_1.parseGeneric)(data);
+    }
+    // MARK: Network
+    /**
+     * Get network interfaces
+     */
+    async getNetworkInterfaces() {
+        const data = await this.performRequest(this.getSystemURL(['Network', 'interfaces']));
+        return (0, lib_1.parseNetworkInterfaces)(data);
+    }
+    /**
+     * Get a single network interface
+     * @param id
+     */
+    async getNetworkInterface(id) {
+        const data = await this.performRequest(this.getSystemURL(['Network', 'interfaces', id]));
+        return (0, lib_1.parseNetworkInterface)(data);
+    }
+    /**
+     * Update network interface
+     * @param id
+     * @param networkInterface
+     */
+    async updateNetworkInterface(id, networkInterface) {
+        const data = await this.performRequest(this.getSystemURL(['Network', 'interfaces', id]), 'PUT', (0, lib_1.buildNetworkInterface)(networkInterface));
+        return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
     close() {
         this.disconnecting = true;

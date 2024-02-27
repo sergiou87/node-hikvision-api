@@ -22,6 +22,10 @@ import {
   parseOptions,
   validatePutResponse,
   buildPathURL,
+  parseCapabilities,
+  parseNetworkInterfaces,
+  parseNetworkInterface,
+  buildNetworkInterface,
 } from './lib';
 import { Method } from 'axios';
 import {
@@ -31,10 +35,13 @@ import {
   HikVisionPartialOptions,
   Integrations,
   NotificationAlert,
+  OnvifUser,
   OnvifUserType,
   StreamingChannel,
   StreamingStatus,
 } from './types';
+import { NetworkInterface } from './types/network-interface.type';
+import { RawCapabilityResponse } from './responses';
 
 export class HikVision extends EventEmitter {
   private triggerActive = false;
@@ -74,10 +81,12 @@ export class HikVision extends EventEmitter {
    * Check if in day mode
    * @param channel defaults to 101
    */
-  isDayMode(channel = 101) {
-    return this.performRequest(
+  async isDayMode(channel = 101): Promise<any> {
+    const data = await this.performRequest(
       this.getRequestURL(['Image', 'channels', channel, 'ISPMode']),
     );
+
+    return parseGeneric(data);
   }
 
   // MARK: Streaming
@@ -102,18 +111,20 @@ export class HikVision extends EventEmitter {
    * Get the capabilities for a channel
    * @param channel
    */
-  async getStreamingCapabilities(channel = 101) {
+  async getStreamingCapabilities(
+    channel = 101,
+  ): Promise<RawCapabilityResponse> {
     const data = await this.performRequest(
       this.getStreamingURL(['channels', channel, 'capabilities']),
     );
-    return parseGeneric(data);
+    return parseCapabilities(data);
   }
 
   /**
    * Get a specific channel
    * @param channel
    */
-  async getStreamingChannel(channel = 101) {
+  async getStreamingChannel(channel = 101): Promise<StreamingChannel> {
     const data = await this.performRequest(
       this.getStreamingURL(['channels', channel]),
     );
@@ -128,7 +139,7 @@ export class HikVision extends EventEmitter {
   async updateStreamingChannel(
     channel = 101,
     streamingChannel: StreamingChannel,
-  ) {
+  ): Promise<{ success: boolean }> {
     const data = await this.performRequest(
       this.getStreamingURL(['channels', channel]),
       'PUT',
@@ -143,7 +154,7 @@ export class HikVision extends EventEmitter {
   /**
    * Get integrations for services
    */
-  async getIntegrations() {
+  async getIntegrations(): Promise<Integrations> {
     const data = await this.performRequest(
       this.getSystemURL(['Network', 'Integrate']),
     );
@@ -155,7 +166,9 @@ export class HikVision extends EventEmitter {
    * Update integrations
    * @param integrations
    */
-  async updateIntegrations(integrations: Integrations) {
+  async updateIntegrations(
+    integrations: Integrations,
+  ): Promise<{ success: boolean }> {
     const xml = buildIntegrations(integrations);
     const data = await this.performRequest(
       this.getSystemURL(['Network', 'Integrate']),
@@ -171,7 +184,7 @@ export class HikVision extends EventEmitter {
   /**
    * Get current ONVIF users
    */
-  async getOnvifUsers() {
+  async getOnvifUsers(): Promise<OnvifUser[]> {
     const data = await this.performRequest(
       this.getSecurityURL(['ONVIF', 'users'], { security: 0 }),
     );
@@ -183,7 +196,7 @@ export class HikVision extends EventEmitter {
    * Delete an ONVIF user by ID
    * @param userID
    */
-  async deleteOnvifUser(userID: number) {
+  async deleteOnvifUser(userID: number): Promise<{ success: boolean }> {
     const data = await this.performRequest(
       this.getSecurityURL(['ONVIF', 'users', userID]),
       'DELETE',
@@ -213,6 +226,48 @@ export class HikVision extends EventEmitter {
     );
 
     return parseGeneric(data);
+  }
+
+  // MARK: Network
+
+  /**
+   * Get network interfaces
+   */
+  async getNetworkInterfaces(): Promise<NetworkInterface[]> {
+    const data = await this.performRequest(
+      this.getSystemURL(['Network', 'interfaces']),
+    );
+    return parseNetworkInterfaces(data);
+  }
+
+  /**
+   * Get a single network interface
+   * @param id
+   */
+  async getNetworkInterface(id: number): Promise<NetworkInterface> {
+    const data = await this.performRequest(
+      this.getSystemURL(['Network', 'interfaces', id]),
+    );
+
+    return parseNetworkInterface(data);
+  }
+
+  /**
+   * Update network interface
+   * @param id
+   * @param networkInterface
+   */
+  async updateNetworkInterface(
+    id: number,
+    networkInterface: NetworkInterface,
+  ): Promise<{ success: boolean }> {
+    const data = await this.performRequest(
+      this.getSystemURL(['Network', 'interfaces', id]),
+      'PUT',
+      buildNetworkInterface(networkInterface),
+    );
+
+    return validatePutResponse(parsePutResponse(data));
   }
 
   close() {

@@ -1,4 +1,4 @@
-import { HikVision } from '../index';
+import { HikVision } from '../dist';
 import { clearTimeout } from 'node:timers';
 
 const camera = new HikVision({

@@ -1,4 +1,4 @@
-import { XMLParser } from 'fast-xml-parser';
+import { X2jOptions, XMLParser } from 'fast-xml-parser';
 import {
   DeviceStatus,
   Integrations,
@@ -7,20 +7,63 @@ import {
   StreamingChannel,
   StreamingStatus,
 } from '../types';
-import { PutResponse } from '../responses';
+import { PutResponse, RawCapabilityResponse } from '../responses';
+import { NetworkInterface } from '../types/network-interface.type';
 
-const getXMLParser = () => {
+const getXMLParser = (options?: X2jOptions) => {
   return new XMLParser({
     ignoreDeclaration: true,
+    ...options,
   });
 };
 
 export const parseGeneric = (data: Buffer): any => {
   const parser = getXMLParser();
 
-  console.log(data.toString('utf-8'));
+  return parser.parse(data);
+};
+
+export const parseCapabilities = (data: Buffer): RawCapabilityResponse => {
+  const parser = getXMLParser({
+    ignoreAttributes: false,
+    allowBooleanAttributes: true,
+    parseAttributeValue: true,
+    attributeNamePrefix: 'prop_',
+  });
 
   return parser.parse(data);
+};
+
+export const parseNetworkInterfaces = (data: Buffer): NetworkInterface[] => {
+  const parser = getXMLParser({
+    parseAttributeValue: true,
+  });
+
+  const parsed: {
+    NetworkInterfaceList:
+      | {
+          NetworkInterface: NetworkInterface;
+        }
+      | {
+          NetworkInterface: NetworkInterface;
+        }[];
+  } = parser.parse(data);
+
+  if (Array.isArray(parsed.NetworkInterfaceList))
+    return parsed.NetworkInterfaceList.map((i) => i.NetworkInterface);
+  else return [parsed.NetworkInterfaceList.NetworkInterface];
+};
+
+export const parseNetworkInterface = (data: Buffer): NetworkInterface => {
+  const parser = getXMLParser({
+    parseAttributeValue: true,
+  });
+
+  const parsed: {
+    NetworkInterface: NetworkInterface;
+  } = parser.parse(data);
+
+  return parsed.NetworkInterface;
 };
 
 export const parseIntegrations = (data: Buffer): Integrations => {
@@ -73,8 +116,6 @@ export const parseStreamingChannels = (data: Buffer): StreamingChannel[] => {
 
 export const parsePutResponse = (data: Buffer) => {
   const parser = getXMLParser();
-
-  console.log(data.toString('utf-8'));
   const parsed: {
     ResponseStatus: PutResponse;
   } = parser.parse(data);

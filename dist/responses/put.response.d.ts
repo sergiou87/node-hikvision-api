@@ -1,5 +1,5 @@
 export type PutResponse = {
-    requestURL: string;
+    requestURL?: string;
     statusCode: number;
     statusString: string;
     subStatusCode: string;

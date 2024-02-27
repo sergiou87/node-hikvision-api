@@ -1,5 +1,6 @@
 import { XMLBuilder } from 'fast-xml-parser';
 import { Integrations, OnvifUserType, StreamingChannel } from '../types';
+import { NetworkInterface } from '../types/network-interface.type';
 
 /**
  * Build integrations object in raw XML
@@ -44,6 +45,24 @@ export const buildStreamOptions = (
   const structure = {
     StreamingChannel: {
       ...channel,
+      attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
+      attr_version: '2.0',
+    },
+  };
+
+  return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
+};
+
+export const buildNetworkInterface = (networkInterface: NetworkInterface) => {
+  const builder = new XMLBuilder({
+    format: false,
+    ignoreAttributes: false,
+    attributeNamePrefix: 'attr_',
+  });
+
+  const structure = {
+    NetworkInterface: {
+      ...networkInterface,
       attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
       attr_version: '2.0',
     },

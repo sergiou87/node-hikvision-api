@@ -1,6 +1,8 @@
 /// <reference types="node" />
 import { EventEmitter } from 'node:events';
-import { DeviceStatus, HikVisionPartialOptions, Integrations, OnvifUserType, StreamingChannel, StreamingStatus } from './types';
+import { DeviceStatus, HikVisionPartialOptions, Integrations, OnvifUser, OnvifUserType, StreamingChannel, StreamingStatus } from './types';
+import { NetworkInterface } from './types/network-interface.type';
+import { RawCapabilityResponse } from './responses';
 export declare class HikVision extends EventEmitter {
     private triggerActive;
     private usingAuthDigest;
@@ -35,7 +37,7 @@ export declare class HikVision extends EventEmitter {
      * Get the capabilities for a channel
      * @param channel
      */
-    getStreamingCapabilities(channel?: number): Promise<any>;
+    getStreamingCapabilities(channel?: number): Promise<RawCapabilityResponse>;
     /**
      * Get a specific channel
      * @param channel
@@ -48,7 +50,6 @@ export declare class HikVision extends EventEmitter {
      */
     updateStreamingChannel(channel: number, streamingChannel: StreamingChannel): Promise<{
         success: boolean;
-        response: import("./responses").PutResponse;
     }>;
     /**
      * Get integrations for services
@@ -60,19 +61,17 @@ export declare class HikVision extends EventEmitter {
      */
     updateIntegrations(integrations: Integrations): Promise<{
         success: boolean;
-        response: import("./responses").PutResponse;
     }>;
     /**
      * Get current ONVIF users
      */
-    getOnvifUsers(): Promise<import("./types").OnvifUser[]>;
+    getOnvifUsers(): Promise<OnvifUser[]>;
     /**
      * Delete an ONVIF user by ID
      * @param userID
      */
     deleteOnvifUser(userID: number): Promise<{
         success: boolean;
-        response: import("./responses").PutResponse;
     }>;
     /**
      * Add an ONVIF user
@@ -82,6 +81,23 @@ export declare class HikVision extends EventEmitter {
      * @param userType - OnvifUserType
      */
     addOnvifUser(username: string, password: string, id: number, userType?: OnvifUserType): Promise<any>;
+    /**
+     * Get network interfaces
+     */
+    getNetworkInterfaces(): Promise<NetworkInterface[]>;
+    /**
+     * Get a single network interface
+     * @param id
+     */
+    getNetworkInterface(id: number): Promise<NetworkInterface>;
+    /**
+     * Update network interface
+     * @param id
+     * @param networkInterface
+     */
+    updateNetworkInterface(id: number, networkInterface: NetworkInterface): Promise<{
+        success: boolean;
+    }>;
     close(): void;
     private connect;
     private handleConnection;

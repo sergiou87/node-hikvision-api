@@ -1,18 +1,47 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseAlert = exports.parseStatus = exports.parsePutResponse = exports.parseStreamingChannels = exports.parseStreamingChannel = exports.parseStreamingStatus = exports.parseUsersList = exports.parseIntegrations = exports.parseGeneric = void 0;
+exports.parseAlert = exports.parseStatus = exports.parsePutResponse = exports.parseStreamingChannels = exports.parseStreamingChannel = exports.parseStreamingStatus = exports.parseUsersList = exports.parseIntegrations = exports.parseNetworkInterface = exports.parseNetworkInterfaces = exports.parseCapabilities = exports.parseGeneric = void 0;
 const fast_xml_parser_1 = require("fast-xml-parser");
-const getXMLParser = () => {
+const getXMLParser = (options) => {
     return new fast_xml_parser_1.XMLParser({
         ignoreDeclaration: true,
+        ...options,
     });
 };
 const parseGeneric = (data) => {
     const parser = getXMLParser();
-    console.log(data.toString('utf-8'));
     return parser.parse(data);
 };
 exports.parseGeneric = parseGeneric;
+const parseCapabilities = (data) => {
+    const parser = getXMLParser({
+        ignoreAttributes: false,
+        allowBooleanAttributes: true,
+        parseAttributeValue: true,
+        attributeNamePrefix: 'prop_',
+    });
+    return parser.parse(data);
+};
+exports.parseCapabilities = parseCapabilities;
+const parseNetworkInterfaces = (data) => {
+    const parser = getXMLParser({
+        parseAttributeValue: true,
+    });
+    const parsed = parser.parse(data);
+    if (Array.isArray(parsed.NetworkInterfaceList))
+        return parsed.NetworkInterfaceList.map((i) => i.NetworkInterface);
+    else
+        return [parsed.NetworkInterfaceList.NetworkInterface];
+};
+exports.parseNetworkInterfaces = parseNetworkInterfaces;
+const parseNetworkInterface = (data) => {
+    const parser = getXMLParser({
+        parseAttributeValue: true,
+    });
+    const parsed = parser.parse(data);
+    return parsed.NetworkInterface;
+};
+exports.parseNetworkInterface = parseNetworkInterface;
 const parseIntegrations = (data) => {
     const parser = getXMLParser();
     const parsed = parser.parse(data);
@@ -47,7 +76,6 @@ const parseStreamingChannels = (data) => {
 exports.parseStreamingChannels = parseStreamingChannels;
 const parsePutResponse = (data) => {
     const parser = getXMLParser();
-    console.log(data.toString('utf-8'));
     const parsed = parser.parse(data);
     return parsed.ResponseStatus;
 };

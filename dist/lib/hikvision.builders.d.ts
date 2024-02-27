@@ -1,4 +1,5 @@
 import { Integrations, OnvifUserType, StreamingChannel } from '../types';
+import { NetworkInterface } from '../types/network-interface.type';
 /**
  * Build integrations object in raw XML
  * @param integrations
@@ -10,6 +11,7 @@ export declare const buildIntegrations: (integrations: Integrations) => any;
  * @param channelID
  */
 export declare const buildStreamOptions: (channel: StreamingChannel, channelID: number) => string;
+export declare const buildNetworkInterface: (networkInterface: NetworkInterface) => string;
 /**
  * @param username
  * @param password

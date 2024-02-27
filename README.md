@@ -93,5 +93,8 @@ camera.on('alarm', (eventType, eventState, channelID) => {
 
 You can run a very similar example available within the repository:
 ```shell
-ts-node src/examples/01-basic.ts 10.1.8.240 password  
+npm run example:1 10.1.8.240 password  
  ```
+
+There are more examples available within `examples/`
+

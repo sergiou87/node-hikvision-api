@@ -1,4 +1,4 @@
-import { HikVision } from '../index';
+import { HikVision } from '../dist';
 
 const camera = new HikVision({
   username: 'admin',

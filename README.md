@@ -13,6 +13,15 @@ Now updated with Typescript and proper ISAPI calls.
 
 The security/encryption process is especially broken
 
+### Working:
+
+* View/update stream channel parameters
+* Get device status
+* Enable/disable ONVIF
+* Add/remove ONVIF users
+* Checking for day mode/night mode
+* Camera alarm handling (see below)
+
 ## Example:
 ```typescript
 import { HikVision } from '@copcart/node-hikvision-api';

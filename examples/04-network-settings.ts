@@ -16,5 +16,4 @@ camera
   })
   .then((result) => {
     console.log(JSON.stringify(result, null, 2));
-    camera.close();
   });

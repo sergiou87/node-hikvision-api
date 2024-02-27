@@ -7,10 +7,6 @@ const camera = new HikVision({
   debug: true,
 });
 
-camera.once('connect', () => {
-  camera.getStreamingCapabilities().then((capabilities) => {
-    console.log(JSON.stringify(capabilities, null, 2));
-
-    camera.close();
-  });
+camera.getStreamingCapabilities().then((capabilities) => {
+  console.log(JSON.stringify(capabilities, null, 2));
 });

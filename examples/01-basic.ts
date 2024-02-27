@@ -21,6 +21,10 @@ const setConnectionTimeout = () => {
   }, 5000 * 3);
 };
 
+// Connect
+camera.connect();
+
+// Listen to connect event
 camera.on('connect', () => {
   Promise.all([
     camera.getOnvifUsers(),
@@ -32,6 +36,7 @@ camera.on('connect', () => {
   });
 });
 
+// Listen for alarms
 camera.on('alarm', (eventType, eventState, channelID) => {
   if (eventType === 'VideoMotion' && eventState === 'Start')
     console.log('Channel ' + channelID + ': Video Motion Detected');

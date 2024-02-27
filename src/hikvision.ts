@@ -65,8 +65,6 @@ export class HikVision extends EventEmitter {
     super();
 
     this.options = parseOptions(options);
-
-    this.connect();
   }
 
   // MARK: General
@@ -284,15 +282,19 @@ export class HikVision extends EventEmitter {
     return validatePutResponse(parsePutResponse(data));
   }
 
+  /**
+   * Close connection to the camera
+   */
   close() {
     this.disconnecting = true;
     this.client.end();
     this.client.destroy();
   }
 
-  // MARK: Private
-
-  private connect() {
+  /**
+   * Connect to the camera for events
+   */
+  connect() {
     const options = this.options;
 
     if (this.authHeaderValue.length === 0) {
@@ -349,6 +351,8 @@ export class HikVision extends EventEmitter {
       this.handleError(err);
     });
   }
+
+  // MARK: Private
 
   private handleConnection() {
     if (this.isAuthenticated || this.usingAuthDigest) {

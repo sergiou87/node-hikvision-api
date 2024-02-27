@@ -7,19 +7,16 @@ const camera = new HikVision({
   debug: true,
 });
 
-camera.once('connect', () => {
-  camera
-    .getStreamingChannel(101)
-    .then((channel) => {
-      // Make changes here and then validate the result
+camera
+  .getStreamingChannel(101)
+  .then((channel) => {
+    // Make changes here and then validate the result
 
-      /// Very invalid video width should return false
-      channel.Video.videoResolutionWidth = 10000;
+    /// Very invalid video width should return false
+    channel.Video.videoResolutionWidth = 10000;
 
-      return camera.validateStreamParameters(101, channel);
-    })
-    .then((validation) => {
-      console.log(JSON.stringify(validation, null, 2));
-      camera.close();
-    });
-});
+    return camera.validateStreamParameters(101, channel);
+  })
+  .then((validation) => {
+    console.log(JSON.stringify(validation, null, 2));
+  });

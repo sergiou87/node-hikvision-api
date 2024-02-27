@@ -7,30 +7,29 @@ const camera = new HikVision({
   debug: true,
 });
 
-camera.once('connect', () => {
-  doCameraActions().then(() => {
-    camera.close();
-  });
-});
-
-const doCameraActions = async () => {
-  const resultOne = await camera.getStreamingChannel(101).then((channel) => {
+camera
+  .getStreamingChannel(101)
+  .then((channel) => {
     channel.Video.videoCodecType = 'H.265';
     channel.Video.maxFrameRate = 2500;
     channel.Video.H265Profile = 'Main';
 
     return camera.updateStreamingChannel(101, channel);
+  })
+  .then((result) => {
+    console.log(JSON.stringify(result, null, 2));
   });
 
-  const resultTwo = await camera.getStreamingChannel(102).then((channel) => {
+camera
+  .getStreamingChannel(102)
+  .then((channel) => {
     channel.Video.videoCodecType = 'H.265';
     channel.Video.maxFrameRate = 2500;
     channel.Video.H265Profile = 'Main';
     channel.Video.vbrUpperCap = 1024;
 
     return camera.updateStreamingChannel(102, channel);
+  })
+  .then((result) => {
+    console.log(JSON.stringify(result, null, 2));
   });
-
-  console.log(resultOne);
-  console.log(resultTwo);
-};

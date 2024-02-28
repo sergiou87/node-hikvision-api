@@ -6,9 +6,9 @@ import {
   OnvifUser,
   StreamingChannel,
   StreamingStatus,
+  NetworkInterface,
 } from '../types';
 import { PutResponse, RawCapabilityResponse } from '../responses';
-import { NetworkInterface } from '../types/network-interface.type';
 
 const getXMLParser = (options?: X2jOptions) => {
   return new XMLParser({

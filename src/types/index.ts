@@ -2,6 +2,7 @@ export * from './camera-event.type';
 export * from './device-status.type';
 export * from './device-time.type';
 export * from './integrations.type';
+export * from './motion-detection.type';
 export * from './network-interface.type';
 export * from './notification-alert.type';
 export * from './onvif-user.type';

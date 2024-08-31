@@ -35,6 +35,7 @@ import {
   HikVisionOptions,
   HikVisionPartialOptions,
   Integrations,
+  MotionDetection,
   NotificationAlert,
   OnvifUser,
   OnvifUserType,
@@ -159,6 +160,22 @@ export class HikVision extends EventEmitter {
     const data = await this.getStreamingCapabilities(channel);
 
     return validateStream(streamingChannel, data);
+  }
+
+  // MARK: Video
+
+  async getVideoMotionDetection(channel = 101): Promise<MotionDetection> {
+    const data = await this.performRequest(
+      this.getSystemURL([
+        'Video',
+        'inputs',
+        'channels',
+        channel,
+        'motionDetection',
+      ]),
+    );
+
+    return parseGeneric(data);
   }
 
   // MARK: Integrations

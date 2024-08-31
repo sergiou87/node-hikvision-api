@@ -27,6 +27,8 @@ import {
   parseNetworkInterface,
   buildNetworkInterface,
   formatStreamCapabilities,
+  parseMotionDetection,
+  buildMotionDetection,
 } from './lib';
 import { Method } from 'axios';
 import {
@@ -164,6 +166,11 @@ export class HikVision extends EventEmitter {
 
   // MARK: Video
 
+  /**
+   * Get motion detection settings.
+   * @param channel - defaults to 101
+   * @returns Motion detection settings
+   */
   async getVideoMotionDetection(channel = 101): Promise<MotionDetection> {
     const data = await this.performRequest(
       this.getSystemURL([
@@ -175,7 +182,34 @@ export class HikVision extends EventEmitter {
       ]),
     );
 
-    return parseGeneric(data);
+    return parseMotionDetection(data);
+  }
+
+  /**
+   * Update motion detection settings.
+   * @param motionDetection - Motion detection settings
+   * @param channel - defaults to 101
+   * @returns Success
+   */
+  async updateVideoMotionDetection(
+    motionDetection: MotionDetection,
+    channel = 101,
+  ): Promise<{ success: boolean }> {
+    const xml = buildMotionDetection(motionDetection);
+
+    const data = await this.performRequest(
+      this.getSystemURL([
+        'Video',
+        'inputs',
+        'channels',
+        channel,
+        'motionDetection',
+      ]),
+      'PUT',
+      xml,
+    );
+
+    return validatePutResponse(parsePutResponse(data));
   }
 
   // MARK: Integrations

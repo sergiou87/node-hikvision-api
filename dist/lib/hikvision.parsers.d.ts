@@ -1,11 +1,11 @@
 /// <reference types="node" />
-import { DeviceStatus, Integrations, NotificationAlert, OnvifUser, StreamingChannel, StreamingStatus } from '../types';
+import { DeviceStatus, Integrations, NotificationAlert, OnvifUser, StreamingChannel, StreamingStatus, NetworkInterface, MotionDetection } from '../types';
 import { PutResponse, RawCapabilityResponse } from '../responses';
-import { NetworkInterface } from '../types/network-interface.type';
 export declare const parseGeneric: (data: Buffer) => any;
 export declare const parseCapabilities: (data: Buffer) => RawCapabilityResponse;
 export declare const parseNetworkInterfaces: (data: Buffer) => NetworkInterface[];
 export declare const parseNetworkInterface: (data: Buffer) => NetworkInterface;
+export declare const parseMotionDetection: (data: Buffer) => MotionDetection;
 export declare const parseIntegrations: (data: Buffer) => Integrations;
 export declare const parseUsersList: (data: Buffer) => OnvifUser[];
 export declare const parseStreamingStatus: (data: Buffer) => StreamingStatus;

@@ -88,6 +88,34 @@ class HikVision extends node_events_1.EventEmitter {
         const data = await this.getStreamingCapabilities(channel);
         return (0, hikvision_validators_1.validateStream)(streamingChannel, data);
     }
+    // MARK: Video
+    /**
+     * Get motion detection settings.
+     * @param channel - defaults to 101
+     * @returns Motion detection settings
+     */
+    async getVideoMotionDetection(channel = 101) {
+        const data = await this.performRequest(this.getSystemURL([
+            'Video',
+            'inputs',
+            'channels',
+            channel,
+            'motionDetection',
+        ]));
+        return (0, lib_1.parseMotionDetection)(data);
+    }
+    async updateVideoMotionDetection(motionDetection, channel = 101) {
+        const xml = (0, lib_1.buildMotionDetection)(motionDetection);
+        const data = await this.performRequest(this.getSystemURL([
+            'Video',
+            'inputs',
+            'channels',
+            channel,
+            'motionDetection',
+        ]), 'PUT', xml);
+        console.log('THE DATA', data);
+        return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
+    }
     // MARK: Integrations
     /**
      * Get integrations for services

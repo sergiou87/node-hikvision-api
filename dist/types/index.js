@@ -16,10 +16,14 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./camera-event.type"), exports);
 __exportStar(require("./device-status.type"), exports);
+__exportStar(require("./device-time.type"), exports);
 __exportStar(require("./integrations.type"), exports);
+__exportStar(require("./motion-detection.type"), exports);
+__exportStar(require("./network-interface.type"), exports);
 __exportStar(require("./notification-alert.type"), exports);
 __exportStar(require("./onvif-user.type"), exports);
 __exportStar(require("./options.type"), exports);
+__exportStar(require("./stream-capabilities.type"), exports);
 __exportStar(require("./streaming-channel.type"), exports);
 __exportStar(require("./streaming-status.type"), exports);
 __exportStar(require("./validators.type"), exports);

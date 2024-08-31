@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildOnvifUser = exports.buildNetworkInterface = exports.buildStreamOptions = exports.buildIntegrations = void 0;
+exports.buildOnvifUser = exports.buildNetworkInterface = exports.buildMotionDetection = exports.buildStreamOptions = exports.buildIntegrations = void 0;
 const fast_xml_parser_1 = require("fast-xml-parser");
 /**
  * Build integrations object in raw XML
@@ -43,6 +43,22 @@ const buildStreamOptions = (channel, channelID) => {
     return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
 };
 exports.buildStreamOptions = buildStreamOptions;
+const buildMotionDetection = (motionDetection) => {
+    const builder = new fast_xml_parser_1.XMLBuilder({
+        format: false,
+        ignoreAttributes: false,
+        attributeNamePrefix: 'attr_',
+    });
+    const structure = {
+        MotionDetection: {
+            ...motionDetection,
+            attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
+            attr_version: '2.0',
+        },
+    };
+    return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
+};
+exports.buildMotionDetection = buildMotionDetection;
 const buildNetworkInterface = (networkInterface) => {
     const builder = new fast_xml_parser_1.XMLBuilder({
         format: false,

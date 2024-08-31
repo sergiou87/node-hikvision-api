@@ -1,5 +1,10 @@
 import { XMLBuilder } from 'fast-xml-parser';
-import { Integrations, OnvifUserType, StreamingChannel } from '../types';
+import {
+  Integrations,
+  MotionDetection,
+  OnvifUserType,
+  StreamingChannel,
+} from '../types';
 import { NetworkInterface } from '../types/network-interface.type';
 
 /**
@@ -45,6 +50,24 @@ export const buildStreamOptions = (
   const structure = {
     StreamingChannel: {
       ...channel,
+      attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
+      attr_version: '2.0',
+    },
+  };
+
+  return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
+};
+
+export const buildMotionDetection = (motionDetection: MotionDetection) => {
+  const builder = new XMLBuilder({
+    format: false,
+    ignoreAttributes: false,
+    attributeNamePrefix: 'attr_',
+  });
+
+  const structure = {
+    MotionDetection: {
+      ...motionDetection,
       attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
       attr_version: '2.0',
     },

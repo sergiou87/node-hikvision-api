@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { EventEmitter } from 'node:events';
-import { DeviceStatus, HikVisionPartialOptions, Integrations, OnvifUser, OnvifUserType, StreamingChannel, StreamingStatus } from './types';
+import { DeviceStatus, HikVisionPartialOptions, Integrations, MotionDetection, OnvifUser, OnvifUserType, StreamingChannel, StreamingStatus } from './types';
 import { NetworkInterface } from './types/network-interface.type';
 import { StreamCapabilities } from './types/stream-capabilities.type';
 export declare class HikVision extends EventEmitter {
@@ -58,6 +58,15 @@ export declare class HikVision extends EventEmitter {
      */
     validateStreamParameters(channel: number, streamingChannel: StreamingChannel): Promise<{
         valid: boolean;
+    }>;
+    /**
+     * Get motion detection settings.
+     * @param channel - defaults to 101
+     * @returns Motion detection settings
+     */
+    getVideoMotionDetection(channel?: number): Promise<MotionDetection>;
+    updateVideoMotionDetection(motionDetection: MotionDetection, channel?: number): Promise<{
+        success: boolean;
     }>;
     /**
      * Get integrations for services

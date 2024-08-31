@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseAlert = exports.parseStatus = exports.parsePutResponse = exports.parseStreamingChannels = exports.parseStreamingChannel = exports.parseStreamingStatus = exports.parseUsersList = exports.parseIntegrations = exports.parseNetworkInterface = exports.parseNetworkInterfaces = exports.parseCapabilities = exports.parseGeneric = void 0;
+exports.parseAlert = exports.parseStatus = exports.parsePutResponse = exports.parseStreamingChannels = exports.parseStreamingChannel = exports.parseStreamingStatus = exports.parseUsersList = exports.parseIntegrations = exports.parseMotionDetection = exports.parseNetworkInterface = exports.parseNetworkInterfaces = exports.parseCapabilities = exports.parseGeneric = void 0;
 const fast_xml_parser_1 = require("fast-xml-parser");
 const getXMLParser = (options) => {
     return new fast_xml_parser_1.XMLParser({
@@ -42,6 +42,14 @@ const parseNetworkInterface = (data) => {
     return parsed.NetworkInterface;
 };
 exports.parseNetworkInterface = parseNetworkInterface;
+const parseMotionDetection = (data) => {
+    const parser = getXMLParser({
+        parseAttributeValue: true,
+    });
+    const parsed = parser.parse(data);
+    return parsed.MotionDetection;
+};
+exports.parseMotionDetection = parseMotionDetection;
 const parseIntegrations = (data) => {
     const parser = getXMLParser();
     const parsed = parser.parse(data);

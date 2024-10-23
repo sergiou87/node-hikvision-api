@@ -104,6 +104,12 @@ class HikVision extends node_events_1.EventEmitter {
         ]));
         return (0, lib_1.parseMotionDetection)(data);
     }
+    /**
+     * Update motion detection settings.
+     * @param motionDetection - Motion detection settings
+     * @param channel - defaults to 101
+     * @returns Success
+     */
     async updateVideoMotionDetection(motionDetection, channel = 101) {
         const xml = (0, lib_1.buildMotionDetection)(motionDetection);
         const data = await this.performRequest(this.getSystemURL([
@@ -113,7 +119,6 @@ class HikVision extends node_events_1.EventEmitter {
             channel,
             'motionDetection',
         ]), 'PUT', xml);
-        console.log('THE DATA', data);
         return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
     }
     // MARK: Integrations

@@ -65,6 +65,12 @@ export declare class HikVision extends EventEmitter {
      * @returns Motion detection settings
      */
     getVideoMotionDetection(channel?: number): Promise<MotionDetection>;
+    /**
+     * Update motion detection settings.
+     * @param motionDetection - Motion detection settings
+     * @param channel - defaults to 101
+     * @returns Success
+     */
     updateVideoMotionDetection(motionDetection: MotionDetection, channel?: number): Promise<{
         success: boolean;
     }>;

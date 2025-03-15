@@ -24,5 +24,7 @@ export type EventTrigger = {
   dynVideoInputChannelID?: string;
   intervalBetweenEvents?: number;
   WLSensorID?: string;
-  EventTriggerNotificationList?: EventTriggerNotification[];
+  EventTriggerNotificationList?: {
+    EventTriggerNotification: EventTriggerNotification[];
+  };
 };

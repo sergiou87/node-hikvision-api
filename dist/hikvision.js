@@ -88,6 +88,37 @@ class HikVision extends node_events_1.EventEmitter {
         const data = await this.getStreamingCapabilities(channel);
         return (0, hikvision_validators_1.validateStream)(streamingChannel, data);
     }
+    // MARK: Events
+    /**
+     * Get event triggers.
+     * @param id - ID of the event
+     * @returns Event triggers
+     */
+    async getEventTrigger(id) {
+        const data = await this.performRequest(this.getRequestURL([
+            'ISAPI',
+            'Event',
+            'triggers',
+            id,
+        ]));
+        return (0, lib_1.parseEventTrigger)(data);
+    }
+    /**
+     * Update event trigger settings.
+     * @param eventTrigger - Event trigger settings
+     * @param id - ID of the event
+     * @returns Success
+     */
+    async updateEventTrigger(eventTrigger, id) {
+        const xml = (0, lib_1.buildEventTrigger)(eventTrigger);
+        const data = await this.performRequest(this.getRequestURL([
+            'ISAPI',
+            'Event',
+            'triggers',
+            id,
+        ]), 'PUT', xml);
+        return (0, lib_1.validatePutResponse)((0, lib_1.parsePutResponse)(data));
+    }
     // MARK: Video
     /**
      * Get motion detection settings.

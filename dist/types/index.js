@@ -17,6 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./camera-event.type"), exports);
 __exportStar(require("./device-status.type"), exports);
 __exportStar(require("./device-time.type"), exports);
+__exportStar(require("./event-trigger.type"), exports);
 __exportStar(require("./integrations.type"), exports);
 __exportStar(require("./motion-detection.type"), exports);
 __exportStar(require("./network-interface.type"), exports);

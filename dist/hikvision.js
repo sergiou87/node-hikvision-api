@@ -96,7 +96,6 @@ class HikVision extends node_events_1.EventEmitter {
      */
     async getEventTrigger(id) {
         const data = await this.performRequest(this.getRequestURL([
-            'ISAPI',
             'Event',
             'triggers',
             id,
@@ -112,7 +111,6 @@ class HikVision extends node_events_1.EventEmitter {
     async updateEventTrigger(eventTrigger, id) {
         const xml = (0, lib_1.buildEventTrigger)(eventTrigger);
         const data = await this.performRequest(this.getRequestURL([
-            'ISAPI',
             'Event',
             'triggers',
             id,

@@ -177,7 +177,6 @@ export class HikVision extends EventEmitter {
   async getEventTrigger(id: string): Promise<EventTrigger> {
     const data = await this.performRequest(
       this.getRequestURL([
-        'ISAPI',
         'Event',
         'triggers',
         id,
@@ -201,7 +200,6 @@ export class HikVision extends EventEmitter {
 
     const data = await this.performRequest(
       this.getRequestURL([
-        'ISAPI',
         'Event',
         'triggers',
         id,

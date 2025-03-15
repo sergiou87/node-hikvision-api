@@ -8,6 +8,7 @@ import {
   StreamingStatus,
   NetworkInterface,
   MotionDetection,
+  EventTrigger,
 } from '../types';
 import { PutResponse, RawCapabilityResponse } from '../responses';
 
@@ -65,6 +66,18 @@ export const parseNetworkInterface = (data: Buffer): NetworkInterface => {
   } = parser.parse(data);
 
   return parsed.NetworkInterface;
+};
+
+export const parseEventTrigger = (data: Buffer): EventTrigger => {
+  const parser = getXMLParser({
+    parseAttributeValue: true,
+  });
+
+  const parsed: {
+    EventTrigger: EventTrigger;
+  } = parser.parse(data);
+
+  return parsed.EventTrigger;
 };
 
 export const parseMotionDetection = (data: Buffer): MotionDetection => {

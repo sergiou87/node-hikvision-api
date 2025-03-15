@@ -27,6 +27,8 @@ import {
   parseNetworkInterface,
   buildNetworkInterface,
   formatStreamCapabilities,
+  parseEventTrigger,
+  buildEventTrigger,
   parseMotionDetection,
   buildMotionDetection,
 } from './lib';
@@ -34,6 +36,7 @@ import { Method } from 'axios';
 import {
   CameraEvent,
   DeviceStatus,
+  EventTrigger,
   HikVisionOptions,
   HikVisionPartialOptions,
   Integrations,
@@ -162,6 +165,52 @@ export class HikVision extends EventEmitter {
     const data = await this.getStreamingCapabilities(channel);
 
     return validateStream(streamingChannel, data);
+  }
+
+  // MARK: Events
+
+  /**
+   * Get event triggers.
+   * @param id - ID of the event
+   * @returns Event triggers
+   */
+  async getEventTrigger(id: string): Promise<EventTrigger> {
+    const data = await this.performRequest(
+      this.getRequestURL([
+        'ISAPI',
+        'Event',
+        'triggers',
+        id,
+      ]),
+    );
+
+    return parseEventTrigger(data);
+  }
+
+  /**
+   * Update event trigger settings.
+   * @param eventTrigger - Event trigger settings
+   * @param id - ID of the event
+   * @returns Success
+   */
+  async updateEventTrigger(
+    eventTrigger: EventTrigger,
+    id: string,
+  ): Promise<{ success: boolean }> {
+    const xml = buildEventTrigger(eventTrigger);
+
+    const data = await this.performRequest(
+      this.getRequestURL([
+        'ISAPI',
+        'Event',
+        'triggers',
+        id,
+      ]),
+      'PUT',
+      xml,
+    );
+
+    return validatePutResponse(parsePutResponse(data));
   }
 
   // MARK: Video

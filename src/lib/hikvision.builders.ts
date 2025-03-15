@@ -1,5 +1,6 @@
 import { XMLBuilder } from 'fast-xml-parser';
 import {
+  EventTrigger,
   Integrations,
   MotionDetection,
   OnvifUserType,
@@ -50,6 +51,24 @@ export const buildStreamOptions = (
   const structure = {
     StreamingChannel: {
       ...channel,
+      attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
+      attr_version: '2.0',
+    },
+  };
+
+  return `<?xml version="1.0" encoding="UTF-8"?>${builder.build(structure)}`;
+};
+
+export const buildEventTrigger = (eventTrigger: EventTrigger) => {
+  const builder = new XMLBuilder({
+    format: false,
+    ignoreAttributes: false,
+    attributeNamePrefix: 'attr_',
+  });
+
+  const structure = {
+    EventTrigger: {
+      ...eventTrigger,
       attr_xmlns: 'http://www.hikvision.com/ver20/XMLSchema',
       attr_version: '2.0',
     },
